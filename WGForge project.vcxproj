@@ -19,17 +19,23 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GameWorld.cpp" />
     <ClCompile Include="graph.cpp" />
     <ClCompile Include="json.cpp" />
+    <ClCompile Include="Map.cpp" />
     <ClCompile Include="SDL_manager.cpp" />
     <ClCompile Include="SDL_window.cpp" />
+    <ClCompile Include="ServerConnection.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GameWorld.h" />
     <ClInclude Include="graph.h" />
     <ClInclude Include="json.h" />
+    <ClInclude Include="Map.h" />
     <ClInclude Include="SDL_manager.h" />
     <ClInclude Include="SDL_window.h" />
+    <ClInclude Include="ServerConnection.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

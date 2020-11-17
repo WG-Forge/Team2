@@ -8,7 +8,7 @@
 #include "SDL_window.h"
 
 class Graph { // class for working with graphs
-private:
+protected:
     struct Vertex {
         struct Edge {
             Edge(size_t idx, size_t to, double length) :idx{ idx }, to { to }, length{ length } {}
@@ -30,9 +30,12 @@ private:
     std::mutex writeLock;
 public:
     explicit Graph(const std::string& filename); // creates graph with points in circular layout from file with json data
-    void Draw(SdlWindow& window); // draws current graph
+    Graph(const std::string& jsonStructureData, const std::string& jsonCoordinatesData);
+    int TranslateVertexIdx(int idx);
+    int TranslateEdgeIdx(int idx);
+    virtual void Draw(SdlWindow& window); // draws current graph
     double ApplyForce(); // applies forces to vertices
-    ~Graph();
+    virtual ~Graph();
 private:
     void AddEdge(size_t from, Vertex::Edge edge);
 };
