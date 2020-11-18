@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
-class ServerConnection
-{ 
+
+class ServerConnection { 
 private:
 	// smth
 public:

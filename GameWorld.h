@@ -2,12 +2,11 @@
 #include "Map.h"
 #include "ServerConnection.h"
 
-class GameWorld
-{
+class GameWorld {
 private:
 	class Train {
 		int idx;
-		int line_idx;
+		int lineIdx;
 		double position;	// may become int
 		double speed;		// may become int
 	};
