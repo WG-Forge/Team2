@@ -2,6 +2,7 @@
 #include "json.h"
 #include <cmath>
 #include <fstream>
+#include <sstream>
 
 constexpr double PI = 3.141592653589793238463;
 constexpr double X_MIDDLE = 400;
@@ -10,31 +11,24 @@ constexpr double R = std::min(X_MIDDLE - 30, Y_MIDDLE - 30);
 
 Graph::Graph(const std::string& filename) {
 	std::ifstream in(filename);
-	Json::Document document = Json::Load(in);
-	auto nodeMap = document.GetRoot().AsMap();
-	adjacencyList.reserve(nodeMap["points"].AsArray().size());
-	std::map<size_t, size_t> idxConverter;
-	double phi = 0;
-	double phi_step = 2 * PI / nodeMap["points"].AsArray().size();
-	for (const auto& vertexNode : nodeMap["points"].AsArray()) {
-		auto vertexMap = vertexNode.AsMap();
-		idxConverter[vertexMap["idx"].AsInt()] = adjacencyList.size();
-		adjacencyList.push_back( {static_cast<size_t>(vertexMap["idx"].AsInt()), std::nullopt, std::list<Vertex::Edge>(),
-			{X_MIDDLE + R * std::cos(phi), Y_MIDDLE + R * std::sin(phi)} });
-		if (!vertexMap["post_idx"].IsNull()) {
-			adjacencyList.back().postIdx = static_cast<size_t>(vertexMap["post_idx"].AsInt());
-		}
-		phi += phi_step;
+	ParseStructure(in);
+}
+
+Graph::Graph(const std::string& jsonStructureData, const std::string& jsonCoordinatesData) {
+	{
+		std::stringstream ss;
+		ss << jsonStructureData;
+		ParseStructure(ss);
 	}
-	for (const auto& edgeNode : nodeMap["lines"].AsArray()) {
-		auto edgeMap = edgeNode.AsMap();
-		size_t from = idxConverter[edgeMap["points"].AsArray()[0].AsInt()];
-		Vertex::Edge edge(edgeMap["idx"].AsInt(), idxConverter[edgeMap["points"].AsArray()[1].AsInt()], edgeMap["length"].AsDouble());
-		AddEdge(from, edge);
-		std::swap(from, edge.to);
-		AddEdge(from, edge);
-		maxLength = std::max(maxLength, edge.length);
+	{
+		std::stringstream ss;
+		ss << jsonCoordinatesData;
+		ParseCoordinates(ss);
 	}
+}
+
+int Graph::TranslateVertexIdx(size_t idx) const {
+	return idxConverter.at(idx);
 }
 
 void Graph::AddEdge(size_t from, Vertex::Edge edge) {
@@ -150,4 +144,45 @@ double Graph::ApplyForce() {
 }
 
 Graph::~Graph() {
+}
+
+void Graph::ParseStructure(std::istream& input) {
+	Json::Document document = Json::Load(input);
+	auto nodeMap = document.GetRoot().AsMap();
+	adjacencyList.reserve(nodeMap["points"].AsArray().size());
+	double phi = 0;
+	double phi_step = 2 * PI / nodeMap["points"].AsArray().size();
+	for (const auto& vertexNode : nodeMap["points"].AsArray()) {
+		auto vertexMap = vertexNode.AsMap();
+		idxConverter[vertexMap["idx"].AsInt()] = adjacencyList.size();
+		adjacencyList.push_back({ static_cast<size_t>(vertexMap["idx"].AsInt()), std::nullopt, std::list<Vertex::Edge>(),
+			{X_MIDDLE + R * std::cos(phi), Y_MIDDLE + R * std::sin(phi)} });
+		if (!vertexMap["post_idx"].IsNull()) {
+			adjacencyList.back().postIdx = static_cast<size_t>(vertexMap["post_idx"].AsInt());
+		}
+		phi += phi_step;
+	}
+	for (const auto& edgeNode : nodeMap["lines"].AsArray()) {
+		auto edgeMap = edgeNode.AsMap();
+		size_t from = TranslateVertexIdx(edgeMap["points"].AsArray()[0].AsInt());
+		Vertex::Edge edge(edgeMap["idx"].AsInt(), TranslateVertexIdx(edgeMap["points"].AsArray()[1].AsInt()), edgeMap["length"].AsDouble());
+		AddEdge(from, edge);
+		std::swap(from, edge.to);
+		AddEdge(from, edge);
+		maxLength = std::max(maxLength, edge.length);
+	}
+}
+
+void Graph::ParseCoordinates(std::istream& input) {
+	Json::Document document = Json::Load(input);
+	auto nodeMap = document.GetRoot().AsMap();
+	for (const auto& node : nodeMap["coordinates"].AsArray()) {
+		auto coordMap = node.AsMap();
+		size_t curIdx = coordMap["idx"].AsInt();
+		adjacencyList[curIdx].point.x = coordMap["x"].AsDouble();
+		adjacencyList[curIdx].point.y = coordMap["y"].AsDouble();
+	}
+	auto sizeArray = nodeMap["size"].AsArray();
+	width = sizeArray[0].AsDouble();
+	height = sizeArray[1].AsDouble();
 }
