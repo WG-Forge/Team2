@@ -40,10 +40,9 @@ public:
     virtual void Draw(SdlWindow& window); // draws current graph
     double ApplyForce(); // applies forces to vertices
     virtual ~Graph();
-protected:
+private:
     void ParseStructure(std::istream& input);
     void ParseCoordinates(std::istream& input);
-private:
     void AddEdge(size_t from, Vertex::Edge edge);
 };
 
