@@ -4,9 +4,9 @@
 #include <fstream>
 
 constexpr double PI = 3.141592653589793238463;
-constexpr double xMiddle = 400;
-constexpr double yMiddle = 300;
-constexpr double r = std::min(xMiddle - 30, yMiddle - 30);
+constexpr double X_MIDDLE = 400;
+constexpr double Y_MIDDLE = 300;
+constexpr double R = std::min(X_MIDDLE - 30, Y_MIDDLE - 30);
 
 Graph::Graph(const std::string& filename) {
 	std::ifstream in(filename);
@@ -20,7 +20,7 @@ Graph::Graph(const std::string& filename) {
 		auto vertexMap = vertexNode.AsMap();
 		idxConverter[vertexMap["idx"].AsInt()] = adjacencyList.size();
 		adjacencyList.push_back( {static_cast<size_t>(vertexMap["idx"].AsInt()), std::nullopt, std::list<Vertex::Edge>(),
-			{xMiddle + r * std::cos(phi), yMiddle + r * std::sin(phi)} });
+			{X_MIDDLE + R * std::cos(phi), Y_MIDDLE + R * std::sin(phi)} });
 		if (!vertexMap["post_idx"].IsNull()) {
 			adjacencyList.back().postIdx = static_cast<size_t>(vertexMap["post_idx"].AsInt());
 		}
@@ -94,8 +94,8 @@ double Graph::ApplyForce() {
 	}
 
 	for (int i = 0; i < adjacencyList.size(); ++i) { // push to the middle
-		double x = adjacencyList[i].point.x - xMiddle;
-		double y = adjacencyList[i].point.y - yMiddle;
+		double x = adjacencyList[i].point.x - X_MIDDLE;
+		double y = adjacencyList[i].point.y - Y_MIDDLE;
 
 		double k = std::max(1.0, adjacencyList.size() / 500.0) / std::sqrt(x * x + y * y);
 		forces[i].first -= x * k;

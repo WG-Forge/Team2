@@ -2,10 +2,10 @@
 #include "graph.h"
 
 enum class PostTypes {
-	none = 0,
-	town,
-	market,
-	storage
+	NONE = 0,
+	TOWN,
+	MARKET,
+	STORAGE
 };
 
 class Map : public Graph
