@@ -143,9 +143,6 @@ double Graph::ApplyForce() {
 	return total;
 }
 
-Graph::~Graph() {
-}
-
 void Graph::ParseStructure(std::istream& input) {
 	Json::Document document = Json::Load(input);
 	auto nodeMap = document.GetRoot().AsMap();
