@@ -39,7 +39,7 @@ public:
     int TranslateEdgeIdx(size_t idx) const;
     virtual void Draw(SdlWindow& window); // draws current graph
     double ApplyForce(); // applies forces to vertices
-    virtual ~Graph();
+    virtual ~Graph() = default;
 private:
     void ParseStructure(std::istream& input);
     void ParseCoordinates(std::istream& input);

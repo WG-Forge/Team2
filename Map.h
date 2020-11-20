@@ -25,5 +25,4 @@ public:
 	Map(const std::string& jsonStructureData, const std::string& jsonCoordinatesData, const std::string& jsonDynamicData);
 	void Draw(SdlWindow& window) override;
 	void Update(const std::string& jsonDynamicData); // updated postsInfo
-	~Map() override;
 };
