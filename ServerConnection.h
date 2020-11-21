@@ -3,7 +3,6 @@
 #include <string>
 #include <curl/curl.h>
 #include <vector>
-using std::string;
 
 class ServerConnection { 
 private:
@@ -27,40 +26,40 @@ private:
 		TIMEOUT = 5,
 		INTERNAL_SERVER_ERROR = 500
 	};
-	const string SERVER_ADDRESS = "http://wgforge-srv.wargaming.net";
+	const std::string SERVER_ADDRESS = "http://wgforge-srv.wargaming.net";
 	const int SERVER_PORT = 443;
 	struct RequestMessage
 	{
 		Request actionCode;
 		size_t dataLength;
-		string request;
-		RequestMessage(Request actionCode, size_t dataLength, string request) :
+		std::string request;
+		RequestMessage(Request actionCode, size_t dataLength, std::string request) :
 			actionCode(actionCode), dataLength(dataLength), request(request) {}
-		string ToString();
+		std::string ToString();
 	};
 	struct ResponseMessage
 	{
 		Result result;
 		size_t dataLength;
-		string response;
-		ResponseMessage(Result result, size_t dataLength, string response) :
+		std::string response;
+		ResponseMessage(Result result, size_t dataLength, std::string response) :
 			result(result), dataLength(dataLength), response(response) {}
-		ResponseMessage(string responseMessage);
+		ResponseMessage(std::string responseMessage);
 	};
 	CURL* curl;
-	string playerIdx;
+	std::string playerIdx;
 public:
-	ServerConnection(const string& player_name); // performs login operation
+	ServerConnection(const std::string& player_name); // performs login operation
 	ResponseMessage GetResponse(const RequestMessage& request); // I will write later
 	void SendRequest(const RequestMessage& request); // I will write later
-	string GetMapStaticObjects();
-	string GetMapDynamicObjects();
-	string GetMapCoordinates();
-	string GetGameState();
+	std::string GetMapStaticObjects();
+	std::string GetMapDynamicObjects();
+	std::string GetMapCoordinates();
+	std::string GetGameState();
 	void MoveTrain(size_t lineIdx, int speed, size_t trainIdx);
 	void Upgrade(std::vector<size_t> postIdxes, std::vector<size_t> trainIdxes);
 	void Turn();
-	string GetPlayerIdx(); // should be initialized in constructor
+	std::string GetPlayerIdx(); // should be initialized in constructor
 	~ServerConnection(); // performs logout operation
 };
 
