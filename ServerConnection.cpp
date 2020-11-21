@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 
+#pragma warning(disable : 4996)
 using namespace Json;
 
 ServerConnection::ServerConnection(const std::string& player_name) {
@@ -22,7 +23,7 @@ ServerConnection::ServerConnection(const std::string& player_name) {
 
 
 ServerConnection::ResponseMessage ServerConnection::GetResponse(const RequestMessage& request) {
-
+	return ResponseMessage{Result::OKEY, 0, ""};
 }
 
 void ServerConnection::SendRequest(const RequestMessage& request) {
