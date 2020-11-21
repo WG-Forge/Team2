@@ -7,12 +7,29 @@ Map::Map(const std::string& jsonStructureData, const std::string& jsonCoordinate
 	Update(jsonDynamicData);
 }
 
-void Map::Draw(SdlWindow& window)
-{
+void Map::Draw(SdlWindow& window) {
+	DrawEdges(window);
+	for (int i = 0; i < posts.size(); ++i) {
+		if (posts[i].type == Post::PostTypes::NONE) {
+			continue;
+		}
+		switch (posts[i].type)
+		{
+		case Post::PostTypes::TOWN:
+			window.SetDrawColor(255, 0, 0);
+			break;
+		case Post::PostTypes::MARKET:
+			window.SetDrawColor(0, 255, 0);
+			break;
+		case Post::PostTypes::STORAGE:
+			window.SetDrawColor(0, 0, 255);
+			break;
+		}
+		window.DrawRectangle(adjacencyList[i].point.x - 10, adjacencyList[i].point.y - 10, adjacencyList[i].point.x + 10, adjacencyList[i].point.y + 10);
+	}
 }
 
-void Map::Update(const std::string& jsonDynamicData)
-{
+void Map::Update(const std::string& jsonDynamicData) {
 	std::stringstream ss;
 	ss << jsonDynamicData;
 	Json::Document doc = Json::Load(ss);

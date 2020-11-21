@@ -59,6 +59,20 @@ void Graph::Draw(SdlWindow& window) {
 	writeLock.unlock();
 }
 
+void Graph::DrawEdges(SdlWindow& window)
+{
+	for (int i = 0; i < adjacencyList.size(); ++i) {
+		for (const auto& j : adjacencyList[i].edges) {
+			if (j.to < i) {
+				break;
+			}
+			unsigned char color = 255 * (maxLength - j.length + 1) / maxLength;
+			window.SetDrawColor(color, color, color);
+			window.DrawLine(std::round(adjacencyList[i].point.x), std::round(adjacencyList[i].point.y), std::round(adjacencyList[j.to].point.x), std::round(adjacencyList[j.to].point.y));
+		}
+	}
+}
+
 double Graph::ApplyForce() {
 	constexpr double coulombsK = 10000.0;
 	constexpr double moveK = 0.1;

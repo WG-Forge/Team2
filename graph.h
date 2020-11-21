@@ -38,6 +38,7 @@ public:
     int TranslateVertexIdx(size_t idx) const;
     int TranslateEdgeIdx(size_t idx) const;
     virtual void Draw(SdlWindow& window); // draws current graph
+    void DrawEdges(SdlWindow& window);
     double ApplyForce(); // applies forces to vertices
     virtual ~Graph() = default;
 private:

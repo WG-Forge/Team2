@@ -13,6 +13,11 @@ void GameWorld::Update()
 	UpdateTrains(dynamicObjects);
 }
 
+void GameWorld::Draw(SdlWindow& window)
+{
+	map.Draw(window);
+}
+
 void GameWorld::UpdateTrains(const std::string& jsonData)
 {
 	std::stringstream ss;
