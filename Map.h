@@ -16,8 +16,7 @@ struct Post {
 	size_t pointIdx;
 };
 
-class Map : public Graph
-{
+class Map : public Graph {
 private:
 	TextureManager& textureManager;
 	std::map<size_t, size_t> postIdxConverter;

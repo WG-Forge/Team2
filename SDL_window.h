@@ -9,16 +9,16 @@ private:
 	SDL_Renderer* renderer;
 	int width;
 	int height;
-	int offset_x = 0;
-	int offset_y = 0;
+	int offsetX = 0;
+	int offsetY = 0;
 	double scaleX = 1.0;
 	double scaleY = 1.0;
 	double scale = 1.0;
-	double target_max_x;
-	double target_min_x;
-	double target_max_y;
-	double target_min_y;
-	bool has_target;
+	double targetMaxX;
+	double targetMinX;
+	double targetMaxY;
+	double targetMinY;
+	bool hasTarget;
 public:
 	SdlWindow(const std::string& name, size_t width = 800, size_t height = 600);
 	TextureManager CreateTextureManager();
@@ -32,6 +32,6 @@ public:
 	bool HasCloseRequest();
 	~SdlWindow();
 private:
-	void updateTarget(int minX, int minY, int maxX, int maxY);
+	void UpdateTarget(int minX, int minY, int maxX, int maxY);
 };
 

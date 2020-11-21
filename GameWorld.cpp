@@ -2,27 +2,22 @@
 #include <sstream>
 #include "json.h"
 
-GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManager) 
-	: connection{ playerName },
-	textureManager{textureManager},
-	map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
+GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManager) : connection{ playerName },	textureManager{textureManager},
+		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
 	UpdateTrains(connection.GetMapDynamicObjects());
 }
 
-void GameWorld::Update()
-{
+void GameWorld::Update() {
 	std::string dynamicObjects = connection.GetMapDynamicObjects();
 	map.Update(dynamicObjects);
 	UpdateTrains(dynamicObjects);
 }
 
-void GameWorld::Draw(SdlWindow& window)
-{
+void GameWorld::Draw(SdlWindow& window) {
 	map.Draw(window);
 }
 
-void GameWorld::UpdateTrains(const std::string& jsonData)
-{
+void GameWorld::UpdateTrains(const std::string& jsonData) {
 	std::stringstream ss;
 	ss << jsonData;
 	Json::Document doc = Json::Load(ss);

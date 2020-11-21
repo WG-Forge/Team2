@@ -59,8 +59,7 @@ void Graph::Draw(SdlWindow& window) {
 	writeLock.unlock();
 }
 
-void Graph::DrawEdges(SdlWindow& window)
-{
+void Graph::DrawEdges(SdlWindow& window) {
 	for (int i = 0; i < adjacencyList.size(); ++i) {
 		for (const auto& j : adjacencyList[i].edges) {
 			if (j.to < i) {

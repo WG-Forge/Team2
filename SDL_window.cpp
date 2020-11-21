@@ -5,7 +5,7 @@
 SdlWindow::SdlWindow(const std::string& name, size_t width, size_t height) {
 	this->width = width;
 	this->height = height;
-	has_target = false;
+	hasTarget = false;
 	window = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, 0);
 	if (!window) {
 		throw std::runtime_error{ SDL_GetError() };
@@ -17,31 +17,28 @@ SdlWindow::SdlWindow(const std::string& name, size_t width, size_t height) {
 	}
 }
 
-TextureManager SdlWindow::CreateTextureManager()
-{
+TextureManager SdlWindow::CreateTextureManager() {
 	return TextureManager{ renderer };
 }
 
 void SdlWindow::DrawLine(int x0, int y0, int x1, int y1) {
-	SDL_RenderDrawLine(renderer, offset_x + x0 * scale, offset_y + y0 * scale, offset_x + x1 * scale, offset_y + y1 * scale);
-	updateTarget(x0, y0, x1, y1);
+	SDL_RenderDrawLine(renderer, offsetX + x0 * scale, offsetY + y0 * scale, offsetX + x1 * scale, offsetY + y1 * scale);
+	UpdateTarget(x0, y0, x1, y1);
 }
 
 void SdlWindow::DrawRectangle(int x0, int y0, int x1, int y1) {
 	SDL_Rect rect;
-	rect.x = offset_x + x0 * scale;
-	rect.y = offset_y + y0 * scale;
+	rect.x = offsetX + x0 * scale;
+	rect.y = offsetY + y0 * scale;
 	rect.h = (y1 - y0) * scale;
 	rect.w = (x1 - x0) * scale;
-	if (std::min(rect.h, rect.w) > 1)
-	{
+	if (std::min(rect.h, rect.w) > 1) {
 		SDL_RenderDrawRect(renderer, &rect);
 	}
-	else
-	{
+	else {
 		SDL_RenderDrawPoint(renderer, rect.x, rect.y);
 	}
-	updateTarget(x0, y0, x1, y1);
+	UpdateTarget(x0, y0, x1, y1);
 }
 
 void SdlWindow::DrawTexture(int xMiddle, int yMiddle, int h, int w, SDL_Texture* texture) {
@@ -68,15 +65,14 @@ void SdlWindow::Clear() {
 
 void SdlWindow::Update() {
 	SDL_RenderPresent(renderer);
-	if (has_target)
-	{
-		scale = std::min(width / ((target_max_x - target_min_x)), height / ((target_max_y - target_min_y)));
-		offset_x = -target_min_x * scale;
-		offset_x += (width - (target_max_x * scale + offset_x)) / 2;
-		offset_y = -target_min_y * scale;
-		offset_y += ((height - (target_max_y * scale + offset_y)) / 2);
+	if (hasTarget) {
+		scale = std::min(width / ((targetMaxX - targetMinX)), height / ((targetMaxY - targetMinY)));
+		offsetX = -targetMinX * scale;
+		offsetX += (width - (targetMaxX * scale + offsetX)) / 2;
+		offsetY = -targetMinY * scale;
+		offsetY += ((height - (targetMaxY * scale + offsetY)) / 2);
 	}
-	has_target = false;
+	hasTarget = false;
 }
 
 bool SdlWindow::HasCloseRequest() {
@@ -104,30 +100,25 @@ SdlWindow::~SdlWindow() {
 	}
 }
 
-void SdlWindow::updateTarget(int minX, int minY, int maxX, int maxY)
+void SdlWindow::UpdateTarget(int minX, int minY, int maxX, int maxY)
 {
-	if (!has_target)
-	{
-		target_min_x = minX;
-		target_max_x = maxX;
-		target_min_y = minY;
-		target_max_y = maxY;
+	if (!hasTarget) {
+		targetMinX = minX;
+		targetMaxX = maxX;
+		targetMinY = minY;
+		targetMaxY = maxY;
 	}
-	has_target = true;
-	if (target_min_x > minX)
-	{
-		target_min_x = minX;
+	hasTarget = true;
+	if (targetMinX > minX) {
+		targetMinX = minX;
 	}
-	if (target_max_x < maxX)
-	{
-		target_max_x = maxX;
+	if (targetMaxX < maxX) {
+		targetMaxX = maxX;
 	}
-	if (target_min_y > minY)
-	{
-		target_min_y = minY;
+	if (targetMinY > minY) {
+		targetMinY = minY;
 	}
-	if (target_max_y < maxY)
-	{
-		target_max_y = maxY;
+	if (targetMaxY < maxY) {
+		targetMaxY = maxY;
 	}
 }

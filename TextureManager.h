@@ -1,8 +1,8 @@
 #pragma once
 #include <unordered_map>
 #include <SDL.h>
-class TextureManager
-{
+
+class TextureManager {
 private:
 	SDL_Renderer* renderer;
 	std::unordered_map<std::string, SDL_Texture*> textures;

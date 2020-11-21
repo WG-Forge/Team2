@@ -2,9 +2,9 @@
 #include "json.h"
 #include <sstream>
 
-Map::Map(const std::string& jsonStructureData, const std::string& jsonCoordinatesData, const std::string& jsonDynamicData, TextureManager& textureManager)
-	: Graph{ jsonStructureData, jsonCoordinatesData },
-	textureManager{ textureManager } {
+Map::Map(const std::string& jsonStructureData, const std::string& jsonCoordinatesData, const std::string& jsonDynamicData, TextureManager& textureManager) : 
+		Graph{ jsonStructureData, jsonCoordinatesData },
+		textureManager{ textureManager } {
 	posts.resize(adjacencyList.size(), { Post::PostTypes::NONE, 0, "", 0 });
 	Update(jsonDynamicData);
 }
@@ -16,8 +16,7 @@ void Map::Draw(SdlWindow& window) {
 			continue;
 		}
 		SDL_Texture* texture = nullptr;
-		switch (posts[i].type)
-		{
+		switch (posts[i].type) {
 		case Post::PostTypes::TOWN:
 			texture = textureManager["assets//town.bmp"];
 			break;

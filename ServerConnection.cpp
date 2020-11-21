@@ -6,12 +6,12 @@
 #pragma warning(disable : 4996)
 using namespace Json;
 
-ServerConnection::ServerConnection(const std::string& player_name) {
+ServerConnection::ServerConnection(const std::string& playerName) {
 	curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_URL, SERVER_ADDRESS);
 	curl_easy_setopt(curl, CURLOPT_PORT, SERVER_PORT);
 	
-	std::string jsonName = "{\"name\":\"" + player_name + "\"}";
+	std::string jsonName = "{\"name\":\"" + playerName + "\"}";
 	RequestMessage request(Request::LOGIN, jsonName.length(), jsonName);
 	ResponseMessage response = GetResponse(request);
 	
@@ -23,7 +23,7 @@ ServerConnection::ServerConnection(const std::string& player_name) {
 
 
 ServerConnection::ResponseMessage ServerConnection::GetResponse(const RequestMessage& request) {
-	return ResponseMessage{Result::OKEY, 0, ""};
+	return ResponseMessage{ Result::OKEY, 0, "" };
 }
 
 void ServerConnection::SendRequest(const RequestMessage& request) {
@@ -35,22 +35,22 @@ std::string ServerConnection::GetPlayerIdx() {
 }
 
 std::string ServerConnection::GetMapStaticObjects() {
-	RequestMessage request(Request::MAP, 11, "{\"layer\":0}");
+	RequestMessage request{ Request::MAP, 11, "{\"layer\":0}" };
 	return GetResponse(request).response;
 }
 
 std::string ServerConnection::GetMapDynamicObjects() {
-	RequestMessage request(Request::MAP, 11, "{\"layer\":1}");
+	RequestMessage request{ Request::MAP, 11, "{\"layer\":1}" };
 	return GetResponse(request).response;
 }
 
 std::string ServerConnection::GetMapCoordinates() {
-	RequestMessage request(Request::MAP, 12, "{\"layer\":10}");
+	RequestMessage request{ Request::MAP, 12, "{\"layer\":10}" };
 	return GetResponse(request).response;
 }
 
 ServerConnection::~ServerConnection() {
-	RequestMessage logoutRequest(Request::LOGOUT, 0, "");
+	RequestMessage logoutRequest{ Request::LOGOUT, 0, "" };
 	SendRequest(logoutRequest);
 	curl_easy_cleanup(curl);
 }

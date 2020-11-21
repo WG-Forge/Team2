@@ -16,8 +16,7 @@ private:
 		GAMES = 7,
 		MAP = 10
 	};
-	enum class Result
-	{
+	enum class Result {
 		OKEY = 0,
 		BAD_COMMAND = 1,
 		RESOURCE_NOT_FOUND = 2,
@@ -28,28 +27,26 @@ private:
 	};
 	const std::string SERVER_ADDRESS = "http://wgforge-srv.wargaming.net";
 	const int SERVER_PORT = 443;
-	struct RequestMessage
-	{
+	struct RequestMessage {
 		Request actionCode;
 		size_t dataLength;
 		std::string request;
 		RequestMessage(Request actionCode, size_t dataLength, std::string request) :
-			actionCode(actionCode), dataLength(dataLength), request(request) {}
+			actionCode{ actionCode }, dataLength{ dataLength }, request{ request } {}
 		std::string ToString();
 	};
-	struct ResponseMessage
-	{
+	struct ResponseMessage {
 		Result result;
 		size_t dataLength;
 		std::string response;
 		ResponseMessage(Result result, size_t dataLength, std::string response) :
-			result(result), dataLength(dataLength), response(response) {}
+			result{ result }, dataLength{ dataLength }, response{ response } {}
 		ResponseMessage(std::string responseMessage);
 	};
 	CURL* curl;
 	std::string playerIdx;
 public:
-	ServerConnection(const std::string& player_name); // performs login operation
+	ServerConnection(const std::string& playerName); // performs login operation
 	ResponseMessage GetResponse(const RequestMessage& request); // I will write later
 	void SendRequest(const RequestMessage& request); // I will write later
 	std::string GetMapStaticObjects();
