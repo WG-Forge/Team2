@@ -2,7 +2,9 @@
 #include "json.h"
 #include <sstream>
 
-Map::Map(const std::string& jsonStructureData, const std::string& jsonCoordinatesData, const std::string& jsonDynamicData):Graph(jsonStructureData, jsonCoordinatesData) {
+Map::Map(const std::string& jsonStructureData, const std::string& jsonCoordinatesData, const std::string& jsonDynamicData, TextureManager& textureManager)
+	: Graph{ jsonStructureData, jsonCoordinatesData },
+	textureManager{ textureManager } {
 	posts.resize(adjacencyList.size(), { Post::PostTypes::NONE, 0, "", 0 });
 	Update(jsonDynamicData);
 }
@@ -13,19 +15,20 @@ void Map::Draw(SdlWindow& window) {
 		if (posts[i].type == Post::PostTypes::NONE) {
 			continue;
 		}
+		SDL_Texture* texture = nullptr;
 		switch (posts[i].type)
 		{
 		case Post::PostTypes::TOWN:
-			window.SetDrawColor(255, 0, 0);
+			texture = textureManager["assets//town.bmp"];
 			break;
 		case Post::PostTypes::MARKET:
-			window.SetDrawColor(0, 255, 0);
+			texture = textureManager["assets//market.bmp"];
 			break;
 		case Post::PostTypes::STORAGE:
-			window.SetDrawColor(0, 0, 255);
+			texture = textureManager["assets//storage.bmp"];
 			break;
 		}
-		window.DrawRectangle(adjacencyList[i].point.x - 10, adjacencyList[i].point.y - 10, adjacencyList[i].point.x + 10, adjacencyList[i].point.y + 10);
+		window.DrawTexture(adjacencyList[i].point.x, adjacencyList[i].point.y, 20, 20, texture);
 	}
 }
 

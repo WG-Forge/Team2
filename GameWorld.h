@@ -14,11 +14,12 @@ private:
 		Train(size_t idx, size_t lineIdx, double position, double speed) :idx{ idx }, lineIdx{ lineIdx }, position{ position }, speed{ speed }{}
 	};
 	ServerConnection connection;
+	TextureManager& textureManager;
 	Map map;
 	std::vector<Train> trains;
 	std::map<size_t, size_t> trainIdxConverter;
 public:
-	GameWorld(const std::string& playerName);
+	GameWorld(const std::string& playerName, TextureManager& textureManager);
 	void Update(); // updates map and trains
 	void Draw(SdlWindow& window);
 private:

@@ -2,7 +2,10 @@
 #include <sstream>
 #include "json.h"
 
-GameWorld::GameWorld(const std::string& playerName):connection(playerName), map(connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects()){
+GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManager) 
+	: connection{ playerName },
+	textureManager{textureManager},
+	map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
 	UpdateTrains(connection.GetMapDynamicObjects());
 }
 

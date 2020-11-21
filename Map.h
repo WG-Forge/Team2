@@ -19,10 +19,11 @@ struct Post {
 class Map : public Graph
 {
 private:
+	TextureManager& textureManager;
 	std::map<size_t, size_t> postIdxConverter;
 	std::vector <Post> posts;
 public:
-	Map(const std::string& jsonStructureData, const std::string& jsonCoordinatesData, const std::string& jsonDynamicData);
+	Map(const std::string& jsonStructureData, const std::string& jsonCoordinatesData, const std::string& jsonDynamicData, TextureManager& textureManager);
 	void Draw(SdlWindow& window) override;
 	void Update(const std::string& jsonDynamicData); // updated postsInfo
 };

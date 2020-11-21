@@ -27,6 +27,7 @@
     <ClCompile Include="SDL_window.cpp" />
     <ClCompile Include="ServerConnection.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="TextureManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameWorld.h" />
@@ -36,6 +37,7 @@
     <ClInclude Include="SDL_manager.h" />
     <ClInclude Include="SDL_window.h" />
     <ClInclude Include="ServerConnection.h" />
+    <ClInclude Include="TextureManager.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

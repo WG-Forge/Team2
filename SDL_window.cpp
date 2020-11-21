@@ -17,6 +17,11 @@ SdlWindow::SdlWindow(const std::string& name, size_t width, size_t height) {
 	}
 }
 
+TextureManager SdlWindow::CreateTextureManager()
+{
+	return TextureManager{ renderer };
+}
+
 void SdlWindow::DrawLine(int x0, int y0, int x1, int y1) {
 	SDL_RenderDrawLine(renderer, offset_x + x0 * scale, offset_y + y0 * scale, offset_x + x1 * scale, offset_y + y1 * scale);
 	updateTarget(x0, y0, x1, y1);
@@ -39,8 +44,22 @@ void SdlWindow::DrawRectangle(int x0, int y0, int x1, int y1) {
 	updateTarget(x0, y0, x1, y1);
 }
 
+void SdlWindow::DrawTexture(int xMiddle, int yMiddle, int h, int w, SDL_Texture* texture) {
+	SDL_Rect target;
+	target.h = h;
+	target.w = w;
+	target.x = xMiddle * scaleX;
+	target.y = yMiddle * scaleY;
+	SDL_RenderCopy(renderer, texture, NULL, &target);
+}
+
 void SdlWindow::SetDrawColor(unsigned char r, unsigned char g, unsigned char b) {
 	SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+}
+
+void SdlWindow::SetScale(int width, int height) {
+	scaleX = (this->width * 1.0) / width;
+	scaleY = (this->height * 1.0) / height;
 }
 
 void SdlWindow::Clear() {
