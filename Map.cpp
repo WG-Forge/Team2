@@ -7,6 +7,10 @@ Map::Map(const std::string& jsonStructureData, const std::string& jsonCoordinate
 	Update(jsonDynamicData);
 }
 
+void Map::Draw(SdlWindow& window)
+{
+}
+
 void Map::Update(const std::string& jsonDynamicData)
 {
 	std::stringstream ss;
