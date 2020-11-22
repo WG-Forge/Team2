@@ -32,15 +32,19 @@ void Map::Draw(SdlWindow& window) {
 }
 
 void Map::Update(const std::string& jsonDynamicData) {
-	std::stringstream ss;
-	ss << jsonDynamicData;
-	Json::Document doc = Json::Load(ss);
-	auto nodeMap = doc.GetRoot().AsMap();
-	for (const auto& node : nodeMap["posts"].AsArray()) {
-		auto postMap = node.AsMap();
-		posts[TranslateVertexIdx(postMap["post_idx"].AsInt())] = { static_cast<Post::PostTypes>(postMap["type"].AsInt()), 
-			static_cast<size_t>(postMap["idx"].AsInt()),
-			postMap["name"].AsString(), static_cast<size_t>(postMap["pointIdx"].AsInt()) };
+	try {
+		std::stringstream ss;
+		ss << jsonDynamicData;
+		Json::Document doc = Json::Load(ss);
+		auto nodeMap = doc.GetRoot().AsMap();
+		for (const auto& node : nodeMap["posts"].AsArray()) {
+			auto postMap = node.AsMap();
+			posts[TranslateVertexIdx(postMap["post_idx"].AsInt())] = { static_cast<Post::PostTypes>(postMap["type"].AsInt()),
+				static_cast<size_t>(postMap["idx"].AsInt()),
+				postMap["name"].AsString(), static_cast<size_t>(postMap["pointIdx"].AsInt()) };
+		}
 	}
-
+	catch (...) {
+		throw std::runtime_error{ "Map::Update error" };
+	}
 }
