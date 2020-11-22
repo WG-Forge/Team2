@@ -4,6 +4,10 @@
 #include <fstream>
 #include <sstream>
 
+#ifdef _DEBUG
+#include <iostream>
+#endif
+
 constexpr double PI = 3.141592653589793238463;
 constexpr double X_MIDDLE = 400;
 constexpr double Y_MIDDLE = 300;
@@ -25,6 +29,9 @@ Graph::Graph(const std::string& jsonStructureData, const std::string& jsonCoordi
 		ss << jsonCoordinatesData;
 		ParseCoordinates(ss);
 	}
+#ifdef _DEBUG
+	std::cout << "vertex count: " << adjacencyList.size() << std::endl;
+#endif
 }
 
 int Graph::TranslateVertexIdx(size_t idx) const {
