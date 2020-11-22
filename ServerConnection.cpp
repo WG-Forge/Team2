@@ -81,7 +81,7 @@ std::string ServerConnection::GetMapCoordinates() {
 }
 
 std::string ServerConnection::GetGameState() {
-
+	return "";
 }
 
 void ServerConnection::MoveTrain(size_t lineIdx, int speed, size_t trainIdx) {
