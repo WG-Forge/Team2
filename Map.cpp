@@ -39,9 +39,9 @@ void Map::Update(const std::string& jsonDynamicData) {
 		auto nodeMap = doc.GetRoot().AsMap();
 		for (const auto& node : nodeMap["posts"].AsArray()) {
 			auto postMap = node.AsMap();
-			posts[TranslateVertexIdx(postMap["post_idx"].AsInt())] = { static_cast<Post::PostTypes>(postMap["type"].AsInt()),
+			posts[TranslateVertexIdx(postMap["point_idx"].AsInt())] = { static_cast<Post::PostTypes>(postMap["type"].AsInt()),
 				static_cast<size_t>(postMap["idx"].AsInt()),
-				postMap["name"].AsString(), static_cast<size_t>(postMap["pointIdx"].AsInt()) };
+				postMap["name"].AsString(), static_cast<size_t>(postMap["point_idx"].AsInt()) };
 		}
 	}
 	catch (...) {
