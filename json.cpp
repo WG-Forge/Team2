@@ -142,9 +142,11 @@ namespace Json {
         } else if (c == 'n') {
             input.putback(c);
             return LoadNull(input);
-        } else {
+        } else if (c == '-' || std::isdigit(c)){
             input.putback(c);
             return LoadNumber(input);
+        } else {
+            throw std::invalid_argument("Ill-formed JSON");
         }
     }
 
