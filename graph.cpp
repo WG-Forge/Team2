@@ -72,7 +72,9 @@ void Graph::DrawEdges(SdlWindow& window) {
 			if (j.to < i) {
 				break;
 			}
-			unsigned char color = 255 * (maxLength - j.length + 1) / maxLength;
+			double k = (maxLength - j.length) / maxLength;
+			k = 0.2 + k * 0.8;
+			unsigned char color = 255 * k;
 			window.SetDrawColor(color, color, color);
 			window.DrawLine(std::round(adjacencyList[i].point.x), std::round(adjacencyList[i].point.y), std::round(adjacencyList[j.to].point.x), std::round(adjacencyList[j.to].point.y));
 		}
