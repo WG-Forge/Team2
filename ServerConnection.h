@@ -1,7 +1,5 @@
 #pragma once
-#define CURL_STATICLIB
 #include <string>
-#include <curl/curl.h>
 #include <vector>
 
 class ServerConnection { 
@@ -48,7 +46,6 @@ private:
 	};
 	ResponseMessage GetResponse(const RequestMessage& request);
 	void SendRequest(const RequestMessage& request);
-	CURL* curl;
 	std::string playerIdx;
 public:
 	class ErrorConnection : public std::exception {

@@ -7,9 +7,6 @@
 using namespace Json;
 
 ServerConnection::ServerConnection(const std::string& playerName) {
-	curl = curl_easy_init();
-	curl_easy_setopt(curl, CURLOPT_URL, SERVER_ADDRESS);
-	curl_easy_setopt(curl, CURLOPT_PORT, SERVER_PORT);
 	
 	std::string jsonName = "{\"name\":\"" + playerName + "\"}";
 	RequestMessage request(Request::LOGIN, jsonName.length(), jsonName);
@@ -24,41 +21,10 @@ ServerConnection::ServerConnection(const std::string& playerName) {
 ServerConnection::ResponseMessage ServerConnection::GetResponse(const RequestMessage& requestMessage) {
 	std::string response;
 	
-	curl_easy_setopt(curl, CURLOPT_READFUNCTION, [](void* data, size_t size, size_t n, void* userdata) {
-		strcpy((char*)data, ((std::string*)userdata)->c_str());
-		return size * n;
-		});
-	curl_easy_setopt(curl, CURLOPT_READDATA, (void*)&(requestMessage.request));
-	curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-	curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, requestMessage.request.length());
-	
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, [](void* data, size_t size, size_t n, void* buffer) {
-		*(std::string*)buffer = (char*)data;
-		return size * n;
-	});
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&response);
-
-	CURLcode retCode = curl_easy_perform(curl);
-	if (retCode != CURLcode::CURLE_OK) {
-		throw ErrorConnection("Error while connecting");
-	}
 	return ResponseMessage(response);
-
 }
 
 void ServerConnection::SendRequest(const ServerConnection::RequestMessage& requestMessage) {
-	curl_easy_setopt(curl, CURLOPT_READFUNCTION, [](void* data, size_t size, size_t n, void* userdata) {
-		strcpy((char*)data, ((std::string*)userdata)->c_str());
-		return size * n;
-	});
-	curl_easy_setopt(curl, CURLOPT_READDATA, (void*)&(requestMessage.request));
-	curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-	curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, requestMessage.request.length());
-	
-	CURLcode retCode = curl_easy_perform(curl);
-	if (retCode != CURLcode::CURLE_OK) {
-		throw ErrorConnection("Error while connecting");
-	}
 }
 
 std::string ServerConnection::GetPlayerIdx() {
@@ -122,7 +88,6 @@ void ServerConnection::Turn() {
 ServerConnection::~ServerConnection() {
 	RequestMessage logoutRequest{ Request::LOGOUT, 0, "" };
 	SendRequest(logoutRequest);
-	curl_easy_cleanup(curl);
 }
 
 void ServerConnection::RequestMessage::ConvertNumberToReverseString(int num, char(&str)[8], int off) {
