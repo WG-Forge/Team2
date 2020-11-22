@@ -18,13 +18,13 @@ void Map::Draw(SdlWindow& window) {
 		SDL_Texture* texture = nullptr;
 		switch (posts[i].type) {
 		case Post::PostTypes::TOWN:
-			texture = textureManager["assets//town.bmp"];
+			texture = textureManager["assets//town.png"];
 			break;
 		case Post::PostTypes::MARKET:
-			texture = textureManager["assets//market.bmp"];
+			texture = textureManager["assets//market.png"];
 			break;
 		case Post::PostTypes::STORAGE:
-			texture = textureManager["assets//storage.bmp"];
+			texture = textureManager["assets//storage.png"];
 			break;
 		}
 		window.DrawTexture(adjacencyList[i].point.x, adjacencyList[i].point.y, 20, 20, texture);

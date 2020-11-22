@@ -1,4 +1,5 @@
 #include "TextureManager.h"
+#include <SDL_image.h>
 
 TextureManager::TextureManager(SDL_Renderer* renderer) : renderer{ renderer } {
 }
@@ -11,7 +12,7 @@ SDL_Texture* TextureManager::operator[](const std::string& key)
     if (textures.find(key) != textures.end()) {
         return textures[key];
     }
-    SDL_Surface* surface = SDL_LoadBMP(key.c_str());
+    SDL_Surface* surface = IMG_Load(key.c_str());
     SDL_Texture* result = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
     textures[key] = result;
