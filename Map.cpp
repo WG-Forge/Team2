@@ -2,6 +2,8 @@
 #include "json.h"
 #include <sstream>
 
+constexpr int TEXTURE_SIDE = 40;
+
 Map::Map(const std::string& jsonStructureData, const std::string& jsonCoordinatesData, const std::string& jsonDynamicData, TextureManager& textureManager) : 
 		Graph{ jsonStructureData, jsonCoordinatesData },
 		textureManager{ textureManager } {
@@ -27,7 +29,7 @@ void Map::Draw(SdlWindow& window) {
 			texture = textureManager["assets//storage.png"];
 			break;
 		}
-		window.DrawTexture(adjacencyList[i].point.x, adjacencyList[i].point.y, 20, 20, texture);
+		window.DrawTexture(adjacencyList[i].point.x, adjacencyList[i].point.y, TEXTURE_SIDE, TEXTURE_SIDE, texture);
 	}
 }
 

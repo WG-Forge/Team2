@@ -12,7 +12,7 @@ constexpr double stableThreshold = 20.0;
 int main(int argC, char** argV) {
 	try {
 		SdlManager manager{};
-		SdlWindow window{ "graph demo", 800, 600 };
+		SdlWindow window{ "graph demo", 1280, 960 };
 		TextureManager textureManager = window.CreateTextureManager();
 		GameWorld world{ "team2", textureManager };
 		bool toExit = false;

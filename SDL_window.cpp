@@ -1,7 +1,7 @@
 #include "SDL_window.h"
 #include <stdexcept>
 
-constexpr int BORDER_WIDTH = 20;
+constexpr int BORDER_WIDTH = 30;
 
 SdlWindow::SdlWindow(const std::string& name, size_t width, size_t height) {
 	this->width = width;
