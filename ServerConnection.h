@@ -28,6 +28,9 @@ private:
 	const std::string SERVER_ADDRESS = "http://wgforge-srv.wargaming.net";
 	const int SERVER_PORT = 443;
 	struct RequestMessage {
+	private:
+		void ConvertNumberToReverseString(int num, char(&str)[8], int off);
+	public:
 		Request actionCode;
 		size_t dataLength;
 		std::string request;
@@ -43,12 +46,17 @@ private:
 			result{ result }, dataLength{ dataLength }, response{ response } {}
 		ResponseMessage(std::string responseMessage);
 	};
+	ResponseMessage GetResponse(const RequestMessage& request);
+	void SendRequest(const RequestMessage& request);
 	CURL* curl;
 	std::string playerIdx;
 public:
+	class ErrorConnection : public std::exception {
+	public:
+		std::string message;
+		ErrorConnection(const std::string& message) : message(message) { }
+	};
 	ServerConnection(const std::string& playerName); // performs login operation
-	ResponseMessage GetResponse(const RequestMessage& request); // I will write later
-	void SendRequest(const RequestMessage& request); // I will write later
 	std::string GetMapStaticObjects();
 	std::string GetMapDynamicObjects();
 	std::string GetMapCoordinates();

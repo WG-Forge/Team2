@@ -21,13 +21,44 @@ ServerConnection::ServerConnection(const std::string& playerName) {
 
 }
 
+ServerConnection::ResponseMessage ServerConnection::GetResponse(const RequestMessage& requestMessage) {
+	std::string response;
+	
+	curl_easy_setopt(curl, CURLOPT_READFUNCTION, [](void* data, size_t size, size_t n, void* userdata) {
+		strcpy((char*)data, ((std::string*)userdata)->c_str());
+		return size * n;
+		});
+	curl_easy_setopt(curl, CURLOPT_READDATA, (void*)&(requestMessage.request));
+	curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+	curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, requestMessage.request.length());
+	
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, [](void* data, size_t size, size_t n, void* buffer) {
+		*(std::string*)buffer = (char*)data;
+		return size * n;
+	});
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&response);
 
-ServerConnection::ResponseMessage ServerConnection::GetResponse(const RequestMessage& request) {
-	return ResponseMessage{ Result::OKEY, 0, "" };
+	CURLcode retCode = curl_easy_perform(curl);
+	if (retCode != CURLcode::CURLE_OK) {
+		throw ErrorConnection("Error while connecting");
+	}
+	return ResponseMessage(response);
+
 }
 
-void ServerConnection::SendRequest(const RequestMessage& request) {
-
+void ServerConnection::SendRequest(const ServerConnection::RequestMessage& requestMessage) {
+	curl_easy_setopt(curl, CURLOPT_READFUNCTION, [](void* data, size_t size, size_t n, void* userdata) {
+		strcpy((char*)data, ((std::string*)userdata)->c_str());
+		return size * n;
+	});
+	curl_easy_setopt(curl, CURLOPT_READDATA, (void*)&(requestMessage.request));
+	curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+	curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, requestMessage.request.length());
+	
+	CURLcode retCode = curl_easy_perform(curl);
+	if (retCode != CURLcode::CURLE_OK) {
+		throw ErrorConnection("Error while connecting");
+	}
 }
 
 std::string ServerConnection::GetPlayerIdx() {
@@ -49,14 +80,45 @@ std::string ServerConnection::GetMapCoordinates() {
 	return GetResponse(request).response;
 }
 
+std::string ServerConnection::GetGameState() {
+
+}
+
+void ServerConnection::MoveTrain(size_t lineIdx, int speed, size_t trainIdx) {
+
+}
+
+void ServerConnection::Upgrade(std::vector<size_t> postIdxes, std::vector<size_t> trainIdxes) {
+
+}
+
+void ServerConnection::Turn() {
+
+}
+
 ServerConnection::~ServerConnection() {
 	RequestMessage logoutRequest{ Request::LOGOUT, 0, "" };
 	SendRequest(logoutRequest);
 	curl_easy_cleanup(curl);
 }
 
+void ServerConnection::RequestMessage::ConvertNumberToReverseString(int num, char(&str)[8], int off) {
+	int mul = 1 << 8;
+	for (int i = 0; i <= 3; i++) {
+		str[off + i] = num % mul;
+		num /= mul;
+	}
+}
+
 std::string ServerConnection::RequestMessage::ToString() {
-	return std::string((char*)&actionCode) + std::string((char*)&dataLength) + request;
+	std::string res = "00000000" + request;
+	char s[8];
+	ConvertNumberToReverseString((int)actionCode, s, 0);
+	ConvertNumberToReverseString((int)dataLength, s, 4);
+	for (int i = 0; i < 8; i++) {
+		res[i] = s[i];
+	}
+	return res;
 }
 
 ServerConnection::ResponseMessage::ResponseMessage(std::string responseMessage): response(responseMessage.substr(8)) {
