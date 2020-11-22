@@ -1,6 +1,7 @@
 #include "SDL_window.h"
 #include <stdexcept>
-#include <iostream>
+
+constexpr int BORDER_WIDTH = 20;
 
 SdlWindow::SdlWindow(const std::string& name, size_t width, size_t height) {
 	this->width = width;
@@ -22,16 +23,16 @@ TextureManager SdlWindow::CreateTextureManager() {
 }
 
 void SdlWindow::DrawLine(int x0, int y0, int x1, int y1) {
-	SDL_RenderDrawLine(renderer, offsetX + x0 * scale, offsetY + y0 * scale, offsetX + x1 * scale, offsetY + y1 * scale);
+	SDL_RenderDrawLine(renderer, TranslateX(x0), TranslateY(y0), TranslateX(x1), TranslateY(y1));
 	UpdateTarget(x0, y0, x1, y1);
 }
 
 void SdlWindow::DrawRectangle(int x0, int y0, int x1, int y1) {
 	SDL_Rect rect;
-	rect.x = offsetX + x0 * scale;
-	rect.y = offsetY + y0 * scale;
-	rect.h = (y1 - y0) * scale;
-	rect.w = (x1 - x0) * scale;
+	rect.x = TranslateX(x0);
+	rect.y = TranslateY(y0);
+	rect.h = (y1 - y0) * scaleY;
+	rect.w = (x1 - x0) * scaleX;
 	if (std::min(rect.h, rect.w) > 1) {
 		SDL_RenderDrawRect(renderer, &rect);
 	}
@@ -45,8 +46,8 @@ void SdlWindow::DrawTexture(int xMiddle, int yMiddle, int h, int w, SDL_Texture*
 	SDL_Rect target;
 	target.h = h;
 	target.w = w;
-	target.x = xMiddle * scaleX;
-	target.y = yMiddle * scaleY;
+	target.x = TranslateX(xMiddle) - h / 2;
+	target.y = TranslateY(yMiddle) - h / 2;
 	SDL_RenderCopy(renderer, texture, NULL, &target);
 }
 
@@ -55,8 +56,8 @@ void SdlWindow::SetDrawColor(unsigned char r, unsigned char g, unsigned char b) 
 }
 
 void SdlWindow::SetScale(int width, int height) {
-	scaleX = (this->width * 1.0) / width;
-	scaleY = (this->height * 1.0) / height;
+	scaleX = (this->width * 1.0) / (width - 2 * BORDER_WIDTH);
+	scaleY = (this->height * 1.0) / (height - 2 * BORDER_WIDTH);
 }
 
 void SdlWindow::Clear() {
@@ -66,13 +67,25 @@ void SdlWindow::Clear() {
 void SdlWindow::Update() {
 	SDL_RenderPresent(renderer);
 	if (hasTarget) {
-		scale = std::min(width / ((targetMaxX - targetMinX)), height / ((targetMaxY - targetMinY)));
-		offsetX = -targetMinX * scale;
-		offsetX += (width - (targetMaxX * scale + offsetX)) / 2;
-		offsetY = -targetMinY * scale;
-		offsetY += ((height - (targetMaxY * scale + offsetY)) / 2);
+		scaleX = (width - 2 * BORDER_WIDTH) / (targetMaxX - targetMinX);
+		scaleY = (height - 2 * BORDER_WIDTH) / (targetMaxY - targetMinY);
+		offsetX = -targetMinX * scaleX;
+		offsetX += ((width - 2 * BORDER_WIDTH) - (targetMaxX * scaleX + offsetX)) / 2;
+		offsetY = -targetMinY * scaleY;
+		offsetY += (((height - 2 * BORDER_WIDTH) - (targetMaxY * scaleY + offsetY)) / 2);
 	}
 	hasTarget = false;
+}
+
+void SdlWindow::Close() {
+	if (renderer) {
+		SDL_DestroyRenderer(renderer);
+		renderer = nullptr;
+	}
+	if (window) {
+		SDL_DestroyWindow(window);
+		window = nullptr;
+	}
 }
 
 bool SdlWindow::HasCloseRequest() {
@@ -92,12 +105,7 @@ bool SdlWindow::HasCloseRequest() {
 }
 
 SdlWindow::~SdlWindow() {
-	if (renderer) {
-		SDL_DestroyRenderer(renderer);
-	}
-	if (window) {
-		SDL_DestroyWindow(window);
-	}
+	Close();
 }
 
 void SdlWindow::UpdateTarget(int minX, int minY, int maxX, int maxY)
@@ -121,4 +129,14 @@ void SdlWindow::UpdateTarget(int minX, int minY, int maxX, int maxY)
 	if (targetMaxY < maxY) {
 		targetMaxY = maxY;
 	}
+}
+
+int SdlWindow::TranslateX(int x)
+{
+	return BORDER_WIDTH + x * scaleX + offsetX;
+}
+
+int SdlWindow::TranslateY(int y)
+{
+	return BORDER_WIDTH + y * scaleY + offsetY;
 }

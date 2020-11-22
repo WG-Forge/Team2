@@ -1,6 +1,5 @@
 #pragma once
 #include "SDL.h"
-#include <string>
 #include "TextureManager.h"
 
 class SdlWindow { // window class containing all methods for drawing
@@ -13,12 +12,11 @@ private:
 	int offsetY = 0;
 	double scaleX = 1.0;
 	double scaleY = 1.0;
-	double scale = 1.0;
-	double targetMaxX;
-	double targetMinX;
-	double targetMaxY;
-	double targetMinY;
-	bool hasTarget;
+	double targetMaxX = 0.0;
+	double targetMinX = 0.0;
+	double targetMaxY = 0.0;
+	double targetMinY = 0.0;
+	bool hasTarget = false;
 public:
 	SdlWindow(const std::string& name, size_t width = 800, size_t height = 600);
 	TextureManager CreateTextureManager();
@@ -29,9 +27,12 @@ public:
 	void SetScale(int width, int height);
 	void Clear();
 	void Update();
+	void Close();
 	bool HasCloseRequest();
 	~SdlWindow();
 private:
 	void UpdateTarget(int minX, int minY, int maxX, int maxY);
+	int TranslateX(int x);
+	int TranslateY(int y);
 };
 
