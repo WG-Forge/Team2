@@ -6,3 +6,6 @@
 .idea
 CMakeLists.txt
 cmake-build-debug
+/libpng16-16.dll
+/SDL2_image.dll
+/zlib1.dll
