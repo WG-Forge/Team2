@@ -85,11 +85,34 @@ std::string ServerConnection::GetGameState() {
 }
 
 void ServerConnection::MoveTrain(size_t lineIdx, int speed, size_t trainIdx) {
-
+	Json::Dict moveDict;
+	moveDict["line_idx"] = static_cast<int>(lineIdx);
+	moveDict["speed"] = speed;
+	moveDict["train_idx"] = static_cast<int>(trainIdx);
+	Json::Document doc{ moveDict };
+	std::stringstream out;
+	Json::Print(doc, out);
+	std::string jsonRequest = out.str();
 }
 
 void ServerConnection::Upgrade(std::vector<size_t> postIdxes, std::vector<size_t> trainIdxes) {
-
+	Json::Dict upgradeDict;
+	Json::Array posts;
+	posts.reserve(postIdxes.size());
+	for (size_t idx : postIdxes) {
+		posts.emplace_back(static_cast<int> (idx));
+	}
+	Json::Array trains;
+	trains.reserve(trainIdxes.size());
+	for (size_t idx : trainIdxes) {
+		trains.emplace_back(static_cast<int> (idx));
+	}
+	upgradeDict["posts"] = posts;
+	upgradeDict["trains"] = trains;
+	std::stringstream out;
+	Json::Document doc{ upgradeDict };
+	Json::Print(doc, out);
+	std::string jsonRequest = out.str();
 }
 
 void ServerConnection::Turn() {
