@@ -14,6 +14,6 @@ C++
 
 ## Notes:
 
-SDL2.dll from 'SDL2/runtime_libs/' must be in the same folder as executable file for executable to run.</br>
-filename is passed as command line argument. If empty "JSON_test_files/big_graph.json" is assumed.</br>
-[Commit history for task "Граф визуальный прекрасный"](https://github.com/mayty/Team2_t1_old_repo) 
+Files from 'SDL2/runtime_libs/' must be in the same folder as executable file for executable to run.</br>
+Assets folder must be in the same folder as executable for successful execution.</br>
+[Repository with commit history for task "Граф визуальный прекрасный"](https://github.com/mayty/Team2_t1_old_repo) 
