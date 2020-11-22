@@ -7,6 +7,7 @@
 #include <iostream>
 
 constexpr int frameTime = 33;
+constexpr double stableThreshold = 20.0;
 
 int main(int argC, char** argV) {
 	try {
@@ -17,10 +18,22 @@ int main(int argC, char** argV) {
 		bool toExit = false;
 		auto lastUpdateTime = std::chrono::high_resolution_clock::now();
 
+		std::thread updateThread{ [&world, &toExit]() {
+			while (!toExit) {
+				world.Update();
+			}
+		} };
+
+		std::thread forceThread{ [&world, &toExit]() {
+			double change = stableThreshold;
+			while (!toExit && change >= stableThreshold) {
+				change = world.ApplyForce();
+			}
+		} };
+
 		while (!(toExit = window.HasCloseRequest())) {
 			window.SetDrawColor(0, 0, 0);
 			window.Clear();
-			world.Update();
 			world.Draw(window);
 
 			auto currentTime = std::chrono::high_resolution_clock::now();
@@ -30,6 +43,9 @@ int main(int argC, char** argV) {
 			lastUpdateTime = std::chrono::high_resolution_clock::now();
 			window.Update();
 		}
+		window.Close();
+		updateThread.join();
+		forceThread.join();
 	}
 	catch (const std::runtime_error& error) {
 		std::cout << "got unexpected error: " << error.what() << std::endl;
