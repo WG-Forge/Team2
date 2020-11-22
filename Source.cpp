@@ -31,6 +31,9 @@ int main(int argC, char** argV) {
 			window.Update();
 		}
 	}
+	catch (const std::runtime_error& error) {
+		std::cout << "got unexpected error: " << error.what() << std::endl;
+	}
 	catch (...) {
 		std::cout << "Whoops..." << std::endl;
 		std::cout << "Something went wrong" << std::endl;
