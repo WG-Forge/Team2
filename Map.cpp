@@ -12,11 +12,11 @@ Map::Map(const std::string& jsonStructureData, const std::string& jsonCoordinate
 void Map::Draw(SdlWindow& window) {
 	DrawEdges(window);
 	for (int i = 0; i < posts.size(); ++i) {
-		if (posts[i].type == Post::PostTypes::NONE) {
-			continue;
-		}
 		SDL_Texture* texture = nullptr;
 		switch (posts[i].type) {
+		case Post::PostTypes::NONE:
+			texture = textureManager["assets//none.png"];
+			break;
 		case Post::PostTypes::TOWN:
 			texture = textureManager["assets//town.png"];
 			break;
