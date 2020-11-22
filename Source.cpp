@@ -32,7 +32,7 @@ int main(int argC, char** argV) {
 		} };
 
 		while (!(toExit = window.HasCloseRequest())) {
-			window.SetDrawColor(0, 0, 0);
+			window.SetDrawColor(35, 23, 0);
 			window.Clear();
 			world.Draw(window);
 
