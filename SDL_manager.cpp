@@ -1,6 +1,7 @@
 #include "SDL_manager.h"
 #include <SDL.h>
 #include <SDL_net.h>
+#include <SDL_image.h>
 #include <exception>
 #include <stdexcept>
 
@@ -13,9 +14,15 @@ SdlManager::SdlManager() {
 		SDL_Quit();
 		throw std::runtime_error{ SDLNet_GetError() };
 	}
+	if (IMG_Init(IMG_INIT_PNG) == -1) {
+		SDLNet_Quit();
+		SDL_Quit();
+		throw std::runtime_error{ IMG_GetError() };
+	}
 }
 
 SdlManager::~SdlManager() {
+	IMG_Quit();
 	SDLNet_Quit();
 	SDL_Quit();
 }
