@@ -38,6 +38,14 @@ int Graph::TranslateVertexIdx(size_t idx) const {
 	return idxConverter.at(idx);
 }
 
+std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) {
+	return std::pair<int, int>{0, 1};
+}
+
+std::pair<double, double> Graph::GetPointCoord(int localPointIdx) {
+	return std::pair<double, double>{adjacencyList[localPointIdx].point.x, adjacencyList[localPointIdx].point.y};
+}
+
 void Graph::AddEdge(size_t from, Vertex::Edge edge) {
 	auto pos = std::find_if(begin(adjacencyList[from].edges), end(adjacencyList[from].edges), [edge](const Vertex::Edge& cur) {return cur.to < edge.to; });
 	if (pos == end(adjacencyList[from].edges)) {

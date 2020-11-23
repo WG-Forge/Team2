@@ -36,6 +36,8 @@ public:
     Graph(const std::string& jsonStructureData, const std::string& jsonCoordinatesData);
     int TranslateVertexIdx(size_t idx) const;
     int TranslateEdgeIdx(size_t idx) const;
+    std::pair<int, int> GetEdgeVertices(int originalEdgeIdx); // returns local from-to idx pair
+    std::pair<double, double> GetPointCoord(int localPointIdx); // returns x-y pair
     virtual void Draw(SdlWindow& window); // draws current graph
     void DrawEdges(SdlWindow& window);
     double ApplyForce(); // applies forces to vertices

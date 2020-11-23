@@ -21,6 +21,7 @@ void GameWorld::Update() {
 
 void GameWorld::Draw(SdlWindow& window) {
 	map.Draw(window);
+	DrawTrains(window);
 }
 
 void GameWorld::UpdateTrains(const std::string& jsonData) {
@@ -36,5 +37,16 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 		trainIdxConverter[trainMap["idx"].AsInt()] = trains.size();
 		trains.emplace_back( static_cast<size_t>(trainMap["idx"].AsInt()), static_cast<size_t>(trainMap["line_idx"].AsInt()), 
 			trainMap["position"].AsDouble(), trainMap["speed"].AsDouble());
+	}
+}
+
+void GameWorld::DrawTrains(SdlWindow& window) {
+	for (const auto& i : trains) {
+		std::pair<int, int> vertices = map.GetEdgeVertices(i.lineIdx);
+		std::pair<double, double> a = map.GetPointCoord(vertices.first);
+		std::pair<double, double> b = map.GetPointCoord(vertices.second);
+		double x = a.first + (a.first - b.first) * (i.position / 100);
+		double y = a.second + (a.second - b.second) * (i.position / 100);
+		window.DrawTexture(x, y, 40, 40, textureManager["assets\\train.png"]);
 	}
 }

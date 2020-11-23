@@ -5,12 +5,11 @@
 class GameWorld {
 private:
 	class Train {
-	private:
+	public:
 		size_t idx;
 		size_t lineIdx;
 		double position;	// may become int
 		double speed;		// may become int
-	public:
 		Train(size_t idx, size_t lineIdx, double position, double speed) : idx{ idx }, lineIdx{ lineIdx }, position{ position }, speed{ speed } {}
 	};
 	ServerConnection connection;
