@@ -1,0 +1,11 @@
+﻿
+/.vs/
+/x64/
+/SDL2.dll
+/SDL2_net.dll
+.idea
+CMakeLists.txt
+cmake-build-debug
+/libpng16-16.dll
+/SDL2_image.dll
+/zlib1.dll
