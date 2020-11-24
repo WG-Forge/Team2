@@ -38,8 +38,26 @@ int Graph::TranslateVertexIdx(size_t idx) const {
 	return idxConverter.at(idx);
 }
 
-std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) {
-	return std::pair<int, int>{0, 1};
+std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) { // super slow incorrect temp solution
+	for (int i = 0; i < adjacencyList.size(); ++i) {
+		for (const auto& j : adjacencyList[i].edges) {
+			if (j.idx == originalEdgeIdx) {
+				return { i, j.to };
+			}
+		}
+	}
+	return { 0,1 };
+}
+
+double Graph::GetEdgeLength(int originalEdgeIdx) { // super slow temp solution
+	for (const auto& i : adjacencyList) {
+		for (const auto& j : i.edges) {
+			if (j.idx == originalEdgeIdx) {
+				return j.length;
+			}
+		}
+	}
+	return 0.0;
 }
 
 std::pair<double, double> Graph::GetPointCoord(int localPointIdx) {

@@ -37,6 +37,7 @@ public:
     int TranslateVertexIdx(size_t idx) const;
     int TranslateEdgeIdx(size_t idx) const;
     std::pair<int, int> GetEdgeVertices(int originalEdgeIdx); // returns local from-to idx pair
+    double GetEdgeLength(int originalEdgeIdx); // returns length of edge
     std::pair<double, double> GetPointCoord(int localPointIdx); // returns x-y pair
     virtual void Draw(SdlWindow& window); // draws current graph
     void DrawEdges(SdlWindow& window);
