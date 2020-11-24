@@ -34,15 +34,15 @@ std::string ServerConnection::GetMapDynamicObjects() {
 }
 
 std::string ServerConnection::GetMapCoordinates() {
+	std::string buf;
 	try {
 		SendMessage(Request::MAP, "{\"layer\":10}");
-		std::string buf = GetResponse();
-		std::cout << "COORDINATES RESPONCE IS WORKING NOW!!!" << std::endl;
-		return buf;
+		buf = GetResponse();
 	}
 	catch (...) {
 		return "{\"coordinates\": [], \"size\": [0,0]}"; // i guess server does not suppor it at the moment
 	}
+	throw std::runtime_error{ "Tell Pasha that layer 10 is working now" };
 }
 
 void ServerConnection::MoveTrain(size_t lineIdx, int speed, size_t trainIdx) {
