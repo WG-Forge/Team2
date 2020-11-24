@@ -1,7 +1,7 @@
 #include "SDL_window.h"
 #include <stdexcept>
 
-constexpr int BORDER_WIDTH = 30;
+constexpr int BORDER_WIDTH = 40;
 
 SdlWindow::SdlWindow(const std::string& name, size_t width, size_t height) {
 	this->width = width;
@@ -42,12 +42,12 @@ void SdlWindow::DrawRectangle(int x0, int y0, int x1, int y1) {
 	UpdateTarget(x0, y0, x1, y1);
 }
 
-void SdlWindow::DrawTexture(int xMiddle, int yMiddle, int h, int w, SDL_Texture* texture) {
+void SdlWindow::DrawTexture(int xMiddle, int yMiddle, int h, int w, SDL_Texture* texture, int absoluteOffsetY) {
 	SDL_Rect target;
 	target.h = h;
 	target.w = w;
 	target.x = TranslateX(xMiddle) - h / 2;
-	target.y = TranslateY(yMiddle) - h / 2;
+	target.y = absoluteOffsetY + TranslateY(yMiddle) - h / 2;
 	SDL_RenderCopy(renderer, texture, NULL, &target);
 }
 
