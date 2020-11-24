@@ -45,8 +45,9 @@ void GameWorld::DrawTrains(SdlWindow& window) {
 		std::pair<int, int> vertices = map.GetEdgeVertices(i.lineIdx);
 		std::pair<double, double> a = map.GetPointCoord(vertices.first);
 		std::pair<double, double> b = map.GetPointCoord(vertices.second);
-		double x = a.first + (a.first - b.first) * (i.position / 100);
-		double y = a.second + (a.second - b.second) * (i.position / 100);
+		double edgeLength = map.GetEdgeLength(i.lineIdx);
+		double x = a.first + (b.first - a.first) * (i.position / edgeLength);
+		double y = a.second + (b.second - a.second) * (i.position / edgeLength);
 		window.DrawTexture(x, y, 40, 40, textureManager["assets\\train.png"]);
 	}
 }
