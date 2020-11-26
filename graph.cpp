@@ -38,23 +38,14 @@ int Graph::TranslateVertexIdx(size_t idx) const {
 	return idxConverter.at(idx);
 }
 
-std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) { // super slow incorrect temp solution
-	for (int i = 0; i < adjacencyList.size(); ++i) {
-		for (const auto& j : adjacencyList[i].edges) {
-			if (j.idx == originalEdgeIdx) {
-				return { i, j.to };
-			}
-		}
-	}
-	return { 0,1 };
+std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) {
+	return edgesData[originalEdgeIdx];
 }
 
-double Graph::GetEdgeLength(int originalEdgeIdx) { // super slow temp solution
-	for (const auto& i : adjacencyList) {
-		for (const auto& j : i.edges) {
-			if (j.idx == originalEdgeIdx) {
-				return j.length;
-			}
+double Graph::GetEdgeLength(int originalEdgeIdx) {
+	for (const auto& j : adjacencyList[GetEdgeVertices(originalEdgeIdx).first].edges) {
+		if (j.idx == originalEdgeIdx) {
+			return j.length;
 		}
 	}
 	return 0.0;
@@ -211,6 +202,7 @@ void Graph::ParseStructure(std::istream& input) {
 		auto edgeMap = edgeNode.AsMap();
 		size_t from = TranslateVertexIdx(edgeMap["points"].AsArray()[0].AsInt());
 		Vertex::Edge edge(edgeMap["idx"].AsInt(), TranslateVertexIdx(edgeMap["points"].AsArray()[1].AsInt()), edgeMap["length"].AsDouble());
+		edgesData[edge.idx] = { from, edge.to };
 		AddEdge(from, edge);
 		std::swap(from, edge.to);
 		AddEdge(from, edge);

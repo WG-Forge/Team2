@@ -29,6 +29,7 @@ protected:
     double maxLength = 0;
     std::mutex writeLock;
     std::map<size_t, size_t> idxConverter;
+    std::map<size_t, std::pair<size_t, size_t>> edgesData;
     double width;
     double height;
 public:
