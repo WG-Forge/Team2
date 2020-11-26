@@ -54,6 +54,8 @@ void ServerConnection::MoveTrain(size_t lineIdx, int speed, size_t trainIdx) {
 	std::stringstream out;
 	Json::Print(doc, out);
 	std::string jsonRequest = out.str();
+	SendMessage(ServerConnection::Request::MOVE, jsonRequest);
+	GetResponse();
 }
 
 void ServerConnection::Upgrade(std::vector<size_t> postIdxes, std::vector<size_t> trainIdxes) {
