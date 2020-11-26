@@ -24,6 +24,38 @@ void GameWorld::Draw(SdlWindow& window) {
 	DrawTrains(window);
 }
 
+void GameWorld::TestTrainMove() {
+	static bool dir = true;
+	if (trains.empty()) {
+		return;
+	}
+	Train c_tr = trains[0];
+	std::pair<int, int> path = map.GetEdgeVertices(c_tr.lineIdx);
+	if (dir) {
+		if (c_tr.position == map.GetEdgeLength(c_tr.lineIdx)) {
+			connection.MoveTrain(c_tr.lineIdx, -1, c_tr.idx);
+			dir = !dir;
+		}
+		else {
+			connection.MoveTrain(c_tr.lineIdx, 1, c_tr.idx);
+		}
+	}
+	else {
+		if (c_tr.position == 0) {
+			connection.MoveTrain(c_tr.lineIdx, 1, c_tr.idx);
+			dir = !dir;
+		}
+		else {
+			connection.MoveTrain(c_tr.lineIdx, -1, c_tr.idx);
+		}
+	}
+}
+
+void GameWorld::MakeMove() {
+	TestTrainMove();
+	connection.EndTurn();
+}
+
 void GameWorld::UpdateTrains(const std::string& jsonData) {
 	std::stringstream ss;
 	ss << jsonData;

@@ -22,7 +22,9 @@ public:
 	double ApplyForce();
 	void Update(); // updates map and trains
 	void Draw(SdlWindow& window);
+	void MakeMove();
 private:
+	void TestTrainMove();
 	void UpdateTrains(const std::string& jsonData);
 	void DrawTrains(SdlWindow& window);
 };
