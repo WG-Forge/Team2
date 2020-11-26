@@ -34,6 +34,7 @@ public:
 	std::string GetMapDynamicObjects();
 	std::string GetMapCoordinates();
 	std::string GetPlayerIdx();
+	std::string GetGameState();
 
 	void MoveTrain(size_t lineIdx, int speed, size_t trainIdx);
 	void Upgrade(std::vector<size_t> postIdxes, std::vector<size_t> trainIdxes);

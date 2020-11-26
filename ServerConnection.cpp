@@ -23,6 +23,12 @@ std::string ServerConnection::GetPlayerIdx() {
 	return playerIdx;
 }
 
+std::string ServerConnection::GetGameState()
+{
+	SendMessage(Request::GAMES, "");
+	return GetResponse();
+}
+
 std::string ServerConnection::GetMapStaticObjects() {
 	SendMessage(Request::MAP, "{\"layer\":0}");
 	return GetResponse();
