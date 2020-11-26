@@ -21,6 +21,7 @@ int main(int argC, char** argV) {
 		std::thread updateThread{ [&world, &toExit]() {
 			while (!toExit) {
 				world.Update();
+				world.MakeMove();
 			}
 		} };
 
