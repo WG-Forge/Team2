@@ -37,6 +37,7 @@ public:
 	std::string GetGameState();
 
 	void MoveTrain(size_t lineIdx, int speed, size_t trainIdx);
+	void EndTurn();
 	void Upgrade(std::vector<size_t> postIdxes, std::vector<size_t> trainIdxes);
 
 	~ServerConnection(); // performs logout operation

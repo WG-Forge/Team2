@@ -64,6 +64,11 @@ void ServerConnection::MoveTrain(size_t lineIdx, int speed, size_t trainIdx) {
 	GetResponse();
 }
 
+void ServerConnection::EndTurn() {
+	SendMessage(Request::TURN, "");
+	GetResponse();
+}
+
 void ServerConnection::Upgrade(std::vector<size_t> postIdxes, std::vector<size_t> trainIdxes) {
 	Json::Dict upgradeDict;
 	Json::Array posts;
