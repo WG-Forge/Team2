@@ -10,6 +10,9 @@ private:
 		size_t lineIdx;
 		double position;	// may become int
 		double speed;		// may become int
+		double capacity;
+		double load;
+		std::string owner;
 		Train(size_t idx, size_t lineIdx, double position, double speed) : idx{ idx }, lineIdx{ lineIdx }, position{ position }, speed{ speed } {}
 	};
 	ServerConnection connection;
@@ -24,6 +27,8 @@ public:
 	void Draw(SdlWindow& window);
 	void MakeMove();
 private:
+	void MoveTrains();
+	void MoveTrain(const Train& train);
 	void TestTrainMove();
 	void UpdateTrains(const std::string& jsonData);
 	void DrawTrains(SdlWindow& window);

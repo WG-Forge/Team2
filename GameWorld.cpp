@@ -24,6 +24,60 @@ void GameWorld::Draw(SdlWindow& window) {
 	DrawTrains(window);
 }
 
+void GameWorld::MoveTrains() {
+	for (const auto& i : trains) {
+		if (i.owner != connection.GetPlayerIdx()) {
+			continue;
+		}
+		MoveTrain(i);
+	}
+}
+
+void GameWorld::MoveTrain(const Train& train) {
+	int to;
+	int current;
+	if (train.position > map.GetEdgeLength(train.lineIdx) / 2) {
+		current = map.GetEdgeVertices(train.lineIdx).second;
+	}
+	else {
+		current = map.GetEdgeVertices(train.lineIdx).first;
+	}
+
+	if (train.load < train.capacity) {
+		to = map.GetNextOnPath(current, map.GetClosestMarket(current));
+		if (to == map.GetClosestMarket(current)) {
+			connection.MoveTrain(train.lineIdx, 0, train.idx);
+			return;
+		}
+	} 
+	else {
+		to = map.GetNextOnPath(current, connection.GetHomeIdx());
+		if (to == connection.GetHomeIdx()) {
+			connection.MoveTrain(train.lineIdx, 0, train.idx);
+			return;
+		}
+	}
+
+	int lineIdx = train.lineIdx;
+	int speed = 0;
+	if (to == map.GetEdgeVertices(train.lineIdx).first) {
+		speed = -1;
+	}
+	else if (to == map.GetEdgeVertices(train.lineIdx).second) {
+		speed = 1;
+	}
+	else {
+		if (current == map.GetEdgeVertices(train.lineIdx).first) {
+			speed = -1;
+		}
+		else {
+			speed = 1;
+		}
+		lineIdx = map.GetEdgeIdx(current, to);		
+	}
+	connection.MoveTrain(lineIdx, speed, train.idx);
+}
+
 void GameWorld::TestTrainMove() {
 	static bool dir = true;
 	if (trains.empty()) {
@@ -52,7 +106,7 @@ void GameWorld::TestTrainMove() {
 }
 
 void GameWorld::MakeMove() {
-	TestTrainMove();
+	MoveTrains();
 	connection.EndTurn();
 }
 
@@ -69,6 +123,9 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 		trainIdxConverter[trainMap["idx"].AsInt()] = trains.size();
 		trains.emplace_back( static_cast<size_t>(trainMap["idx"].AsInt()), static_cast<size_t>(trainMap["line_idx"].AsInt()), 
 			trainMap["position"].AsDouble(), trainMap["speed"].AsDouble());
+		trains[trains.size() - 1].capacity = trainMap["goods_capacity"].AsDouble();
+		trains[trains.size() - 1].load = trainMap["goods"].AsDouble();
+		trains[trains.size() - 1].owner = trainMap["player_idx"].AsString();
 	}
 }
 
