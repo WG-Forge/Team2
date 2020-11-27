@@ -10,6 +10,14 @@ struct Post {
 		MARKET,
 		STORAGE
 	};
+	Post(PostTypes type, size_t idx, const std::string& name, size_t pointIdx) : type{ type }, idx{ idx }, name{ name }, pointIdx{ pointIdx } {
+	}
+	double goodsCapacity = 0.0;
+	double goodsLoad = 0.0;
+	double armorCapacity = 0.0;
+	double armorLoad = 0.0;
+	double populationCapacity = 0.0;
+	double populationLoad = 0.0;
 	PostTypes type;
 	size_t idx;
 	std::string name;

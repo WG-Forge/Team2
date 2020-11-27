@@ -43,7 +43,37 @@ void Map::Draw(SdlWindow& window) {
 			break;
 		}
 		 
-		window.DrawTexture(adjacencyList[i].point.x, adjacencyList[i].point.y, textureSide, textureSide, texture, offsetY);
+		window.DrawTexture(adjacencyList[i].point.x, adjacencyList[i].point.y, textureSide, textureSide, texture, offsetY); 
+		switch (posts[i].type) {
+		case Post::PostTypes::NONE:
+			break;
+		case Post::PostTypes::TOWN:
+		{
+			int x = adjacencyList[i].point.x;
+			int y = adjacencyList[i].point.y;
+			window.SetDrawColor(255, 0, 0);
+			window.FillRectangle(x, y, 15, textureSide, -textureSide);
+			window.SetDrawColor(0, 255, 0);
+			window.FillRectangle(x, y, 5, textureSide * (posts[i].goodsLoad / posts[i].goodsCapacity), -textureSide);
+			window.SetDrawColor(0, 0, 255);
+			window.FillRectangle(adjacencyList[i].point.x, adjacencyList[i].point.y, 5, textureSide * (posts[i].armorLoad / posts[i].armorCapacity), 5 - textureSide);
+			window.SetDrawColor(255, 0, 255);
+			window.FillRectangle(adjacencyList[i].point.x, adjacencyList[i].point.y, 5, textureSide * (posts[i].populationLoad / posts[i].populationCapacity), -(5 + textureSide));
+		}
+			break;
+		case Post::PostTypes::MARKET:
+			window.SetDrawColor(255, 0, 0);
+			window.FillRectangle(adjacencyList[i].point.x, adjacencyList[i].point.y, 5, textureSide, -textureSide / 1.5);
+			window.SetDrawColor(0, 255, 0);
+			window.FillRectangle(adjacencyList[i].point.x, adjacencyList[i].point.y, 5, textureSide * (posts[i].goodsLoad / posts[i].goodsCapacity), -textureSide / 1.5);
+			break;
+		case Post::PostTypes::STORAGE:
+			window.SetDrawColor(255, 0, 0);
+			window.FillRectangle(adjacencyList[i].point.x, adjacencyList[i].point.y, 5, textureSide, -textureSide / 1.5);
+			window.SetDrawColor(0, 0, 255);
+			window.FillRectangle(adjacencyList[i].point.x, adjacencyList[i].point.y, 5, textureSide * (posts[i].armorLoad / posts[i].armorCapacity), -textureSide / 1.5);
+			break;
+		}
 	}
 }
 
@@ -58,6 +88,22 @@ void Map::Update(const std::string& jsonDynamicData) {
 			posts[TranslateVertexIdx(postMap["point_idx"].AsInt())] = { static_cast<Post::PostTypes>(postMap["type"].AsInt()),
 				static_cast<size_t>(postMap["idx"].AsInt()),
 				postMap["name"].AsString(), static_cast<size_t>(postMap["point_idx"].AsInt()) };
+			if (posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].type == Post::PostTypes::TOWN) {
+				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].goodsCapacity = postMap["product_capacity"].AsDouble();
+				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].goodsLoad = postMap["product"].AsDouble();
+				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].armorCapacity = postMap["armor_capacity"].AsDouble();
+				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].armorLoad = postMap["armor"].AsDouble();
+				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].populationCapacity = postMap["population_capacity"].AsDouble();
+				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].populationLoad = postMap["population"].AsDouble();
+			}
+			else if(posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].type == Post::PostTypes::MARKET) {
+				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].goodsCapacity = postMap["product_capacity"].AsDouble();
+				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].goodsLoad = postMap["product"].AsDouble();
+			}
+			else if (posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].type == Post::PostTypes::STORAGE) {
+				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].armorCapacity = postMap["armor_capacity"].AsDouble();
+				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].armorLoad = postMap["armor"].AsDouble();
+			}
 		}
 	}
 	catch (...) {
