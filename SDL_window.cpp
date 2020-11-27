@@ -1,7 +1,7 @@
 #include "SDL_window.h"
 #include <stdexcept>
 
-constexpr int BORDER_WIDTH = 40;
+constexpr int BORDER_WIDTH = 100;
 
 SdlWindow::SdlWindow(const std::string& name, size_t width, size_t height) {
 	this->width = width;
@@ -46,9 +46,19 @@ void SdlWindow::DrawTexture(int xMiddle, int yMiddle, int h, int w, SDL_Texture*
 	SDL_Rect target;
 	target.h = h;
 	target.w = w;
-	target.x = TranslateX(xMiddle) - h / 2;
+	target.x = TranslateX(xMiddle) - w / 2;
 	target.y = absoluteOffsetY + TranslateY(yMiddle) - h / 2;
 	SDL_RenderCopy(renderer, texture, NULL, &target);
+}
+
+void SdlWindow::FillRectangle(int xMiddle, int yMiddle, int h, int w, int absoluteOffsetY) {
+	SDL_Rect target;
+	target.h = h;
+	target.w = w;
+	target.x = TranslateX(xMiddle) - w / 2;
+	target.y = absoluteOffsetY + TranslateY(yMiddle) - h / 2;
+	SDL_RenderFillRect(renderer, &target);
+
 }
 
 void SdlWindow::SetDrawColor(unsigned char r, unsigned char g, unsigned char b) {
