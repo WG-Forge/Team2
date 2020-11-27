@@ -17,6 +17,12 @@ ServerConnection::ServerConnection(const std::string& playerName) {
 	std::stringstream responseStream = std::stringstream(GetResponse());
 	Json::Dict responseDocument = Json::Load(responseStream).GetRoot().AsMap();
 	playerIdx = responseDocument["idx"].AsString();
+	auto home = responseDocument["home"].AsMap();
+	homeIdx = home["idx"].AsInt();
+}
+
+int ServerConnection::GetHomeIdx() {
+	return homeIdx;
 }
 
 std::string ServerConnection::GetPlayerIdx() {

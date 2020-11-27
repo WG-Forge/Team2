@@ -18,6 +18,7 @@ private:
 
 	TCPsocket socket;
 	std::string playerIdx;
+	int homeIdx;
 public:
 	enum class Result {
 		OKEY = 0,
@@ -33,8 +34,10 @@ public:
 	std::string GetMapStaticObjects();
 	std::string GetMapDynamicObjects();
 	std::string GetMapCoordinates();
-	std::string GetPlayerIdx();
 	std::string GetGameState();
+
+	int GetHomeIdx();
+	std::string GetPlayerIdx();
 
 	void MoveTrain(size_t lineIdx, int speed, size_t trainIdx);
 	void EndTurn();
