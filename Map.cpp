@@ -11,6 +11,15 @@ Map::Map(const std::string& jsonStructureData, const std::string& jsonCoordinate
 	Update(jsonDynamicData);
 }
 
+int Map::GetClosestMarket(int from)
+{
+	while (true) {
+		if (posts[(from++) % posts.size()].type == Post::PostTypes::MARKET) {
+			return from - 1;
+		}
+	}
+}
+
 void Map::Draw(SdlWindow& window) {
 	DrawEdges(window);
 	for (int i = 0; i < posts.size(); ++i) {

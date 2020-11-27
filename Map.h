@@ -23,6 +23,7 @@ private:
 	std::vector <Post> posts;
 public:
 	Map(const std::string& jsonStructureData, const std::string& jsonCoordinatesData, const std::string& jsonDynamicData, TextureManager& textureManager);
+	int GetClosestMarket(int from);
 	void Draw(SdlWindow& window) override;
 	void Update(const std::string& jsonDynamicData); // updated postsInfo
 };
