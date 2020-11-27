@@ -30,6 +30,7 @@ protected:
     std::mutex writeLock;
     std::map<size_t, size_t> idxConverter;
     std::map<size_t, std::pair<size_t, size_t>> edgesData;
+    std::vector<std::vector<int>> spTrees;
     double width;
     double height;
 public:
@@ -37,6 +38,8 @@ public:
     Graph(const std::string& jsonStructureData, const std::string& jsonCoordinatesData);
     int TranslateVertexIdx(size_t idx) const;
     int TranslateEdgeIdx(size_t idx) const;
+    int GetEdgeIdx(int from, int to);
+    int GetNextOnPath(int from, int to);
     std::pair<int, int> GetEdgeVertices(int originalEdgeIdx); // returns local from-to idx pair
     double GetEdgeLength(int originalEdgeIdx); // returns length of edge
     std::pair<double, double> GetPointCoord(int localPointIdx); // returns x-y pair
@@ -48,5 +51,7 @@ private:
     void ParseStructure(std::istream& input);
     void ParseCoordinates(std::istream& input);
     void AddEdge(size_t from, Vertex::Edge edge);
+    int GetNextOnPath(const std::vector<int>& spTree, int from, int to);
+    void GenerateSpTree(int origin);
 };
 

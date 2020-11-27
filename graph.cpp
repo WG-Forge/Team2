@@ -29,6 +29,7 @@ Graph::Graph(const std::string& jsonStructureData, const std::string& jsonCoordi
 		ss << jsonCoordinatesData;
 		ParseCoordinates(ss);
 	}
+	spTrees.resize(adjacencyList.size());
 #ifdef _DEBUG
 	std::cout << "vertex count: " << adjacencyList.size() << std::endl;
 #endif
@@ -36,6 +37,23 @@ Graph::Graph(const std::string& jsonStructureData, const std::string& jsonCoordi
 
 int Graph::TranslateVertexIdx(size_t idx) const {
 	return idxConverter.at(idx);
+}
+
+int Graph::GetEdgeIdx(int from, int to) {
+	for (const auto& i : adjacencyList[from].edges) {
+		if (i.to == to) {
+			return i.idx;
+		}
+	}
+	return 0;
+}
+
+int Graph::GetNextOnPath(int from, int to) {	
+	if (spTrees[from].empty()) {
+		GenerateSpTree(from);
+	}
+
+	return GetNextOnPath(spTrees[from], from, to);
 }
 
 std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) {
@@ -62,6 +80,14 @@ void Graph::AddEdge(size_t from, Vertex::Edge edge) {
 	} else {
 		adjacencyList[from].edges.insert(pos, edge);
 	}
+}
+
+void Graph::GenerateSpTree(int origin) {
+	spTrees[origin].resize(adjacencyList.size());
+}
+
+int Graph::GetNextOnPath(const std::vector<int>& spTree, int from, int to) {
+	return -1;
 }
 
 void Graph::Draw(SdlWindow& window) {
