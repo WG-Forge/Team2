@@ -226,6 +226,9 @@ std::string ServerConnection::GetResponse()
 	}
 
 	if (buf != Result::OKEY) {
+#ifdef _DEBUG
+		std::cout << response << std::endl;
+#endif
 		delete[] response;
 		throw buf;
 	}
