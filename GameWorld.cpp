@@ -142,12 +142,35 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 
 void GameWorld::DrawTrains(SdlWindow& window) {
 	for (const auto& i : trains) {
+		double from, to;
 		std::pair<int, int> vertices = map.GetEdgeVertices(i.lineIdx);
 		std::pair<double, double> a = map.GetPointCoord(vertices.first);
 		std::pair<double, double> b = map.GetPointCoord(vertices.second);
+		if (i.speed >= 0) {
+			from = a.first;
+			to = b.first;
+		}
+		else {
+			from = b.first;
+			to = a.first;
+		}
+
+		bool toMirror;
+		if (from > to) {
+			toMirror = true;
+		}
+		else {
+			toMirror = false;
+		}
+
 		double edgeLength = map.GetEdgeLength(i.lineIdx);
 		double x = a.first + (b.first - a.first) * (i.position / edgeLength);
 		double y = a.second + (b.second - a.second) * (i.position / edgeLength);
-		window.DrawTexture(x, y, 40, 40, textureManager["assets\\train.png"]);
+		if (i.speed == 0) {
+			window.DrawTexture(x, y, 40, 40, textureManager["assets\\train_no_move.png"], 0.0, toMirror);
+		}
+		else {
+			window.DrawTexture(x, y, 40, 40, textureManager["assets\\train.png"], 0.0, toMirror);
+		}
 	}
 }
