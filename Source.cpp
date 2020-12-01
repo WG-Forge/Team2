@@ -19,12 +19,21 @@ int main(int argC, char** argV) {
 		auto lastUpdateTime = std::chrono::high_resolution_clock::now();
 
 		std::thread updateThread{ [&world, &toExit]() {
-			while (!toExit) {
-				auto before = std::chrono::high_resolution_clock::now();
-				world.Update();
-				world.MakeMove();
-				auto after = std::chrono::high_resolution_clock::now();
-				std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << "ms" << std::endl;
+			try {
+				while (!toExit) {
+					auto before = std::chrono::high_resolution_clock::now();
+					world.Update();
+					world.MakeMove();
+					auto after = std::chrono::high_resolution_clock::now();
+					std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << "ms" << std::endl;
+				}
+			}
+			catch (const std::runtime_error& error) {
+				std::cout << "got unexpected error: " << error.what() << std::endl;
+			}
+			catch (...) {
+				std::cout << "Whoops..." << std::endl;
+				std::cout << "Something went wrong" << std::endl;
 			}
 		} };
 
