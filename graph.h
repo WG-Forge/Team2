@@ -30,7 +30,11 @@ protected:
     std::mutex writeLock;
     std::map<size_t, size_t> idxConverter;
     std::map<size_t, std::pair<size_t, size_t>> edgesData;
-    std::vector<std::vector<int>> spTrees;
+    struct spData {
+        int prevVertex;
+        double length;
+    };
+    std::vector<std::vector<spData>> spTrees;
     double width;
     double height;
 public:
@@ -51,7 +55,7 @@ private:
     void ParseStructure(std::istream& input);
     void ParseCoordinates(std::istream& input);
     void AddEdge(size_t from, Vertex::Edge edge);
-    int GetNextOnPath(const std::vector<int>& spTree, int from, int to);
+    int GetNextOnPath(const std::vector<spData>& spTree, int from, int to);
     void GenerateSpTree(int origin);
 };
 

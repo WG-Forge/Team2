@@ -3,7 +3,7 @@
 #include <cmath>
 #include <fstream>
 #include <sstream>
-
+#include <queue>
 #ifdef _DEBUG
 #include <iostream>
 #endif
@@ -83,11 +83,36 @@ void Graph::AddEdge(size_t from, Vertex::Edge edge) {
 }
 
 void Graph::GenerateSpTree(int origin) {
-	spTrees[origin].resize(adjacencyList.size());
+	spTrees[origin].assign(adjacencyList.size(), { -1, -1 });
+	struct dijkstraData {
+		int idx;
+		int prev;
+		double length;
+	};
+	auto comparator = [](const dijkstraData& lhs, const dijkstraData& rhs) {return lhs.length > rhs.length; };
+	std::priority_queue<dijkstraData, std::vector<dijkstraData>, decltype(comparator)> dijkstra(comparator);
+	dijkstra.push({ 0, -1, 0 });
+	for (size_t i = 0; i < adjacencyList.size(); i++) {
+		int cur = dijkstra.top().idx;
+		while (spTrees[origin][cur].length != -1) {
+			dijkstra.pop();
+			cur = dijkstra.top().idx;
+		}
+		spTrees[origin][cur] = { dijkstra.top().prev, dijkstra.top().length };
+		for (const auto& edge : adjacencyList[cur].edges) {
+			if (spTrees[origin][edge.to].length == -1) {
+				dijkstra.push({ static_cast<int>(edge.to), cur, spTrees[origin][cur].length + edge.length });
+			}
+		}
+	}
 }
 
-int Graph::GetNextOnPath(const std::vector<int>& spTree, int from, int to) {
-	return -1;
+int Graph::GetNextOnPath(const std::vector<spData>& spTree, int from, int to) {
+	int ans = to;
+	while (spTree[ans].prevVertex != from) {
+		ans = spTree[ans].prevVertex;
+	}
+	return ans;
 }
 
 void Graph::Draw(SdlWindow& window) {
