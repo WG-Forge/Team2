@@ -48,6 +48,17 @@ int Graph::GetEdgeIdx(int from, int to) {
 	return 0;
 }
 
+double Graph::GetDistance(int from, int to)
+{
+	if (from == to) {
+		return 0.0;
+	}
+	if (spTrees[from].empty()) {
+		GenerateSpTree(from);
+	}
+	return spTrees[from][to].length;
+}
+
 int Graph::GetNextOnPath(int from, int to) {	
 	if (from == to) {
 		return to;

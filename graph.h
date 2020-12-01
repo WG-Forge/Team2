@@ -43,6 +43,7 @@ public:
     int TranslateVertexIdx(size_t idx) const;
     int TranslateEdgeIdx(size_t idx) const;
     int GetEdgeIdx(int from, int to);
+    double GetDistance(int from, int to);
     int GetNextOnPath(int from, int to);
     std::pair<int, int> GetEdgeVertices(int originalEdgeIdx); // returns local from-to idx pair
     double GetEdgeLength(int originalEdgeIdx); // returns length of edge
