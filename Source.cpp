@@ -20,8 +20,11 @@ int main(int argC, char** argV) {
 
 		std::thread updateThread{ [&world, &toExit]() {
 			while (!toExit) {
+				auto before = std::chrono::high_resolution_clock::now();
 				world.Update();
 				world.MakeMove();
+				auto after = std::chrono::high_resolution_clock::now();
+				std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << "ms" << std::endl;
 			}
 		} };
 
