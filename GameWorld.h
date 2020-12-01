@@ -29,6 +29,7 @@ public:
 private:
 	void MoveTrains();
 	void MoveTrain(const Train& train);
+	void MoveTrainTo(const Train& train, int to);
 	void TestTrainMove();
 	void UpdateTrains(const std::string& jsonData);
 	void DrawTrains(SdlWindow& window);

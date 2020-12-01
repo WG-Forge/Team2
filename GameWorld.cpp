@@ -35,47 +35,53 @@ void GameWorld::MoveTrains() {
 
 void GameWorld::MoveTrain(const Train& train) {
 	int to;
-	int current;
-	if (train.position > map.GetEdgeLength(train.lineIdx) / 2) {
-		current = map.GetEdgeVertices(train.lineIdx).second;
-	}
-	else {
-		current = map.GetEdgeVertices(train.lineIdx).first;
-	}
+	auto [first, second] = map.GetEdgeVertices(train.lineIdx);
 
 	if (train.load < train.capacity) {
-		to = map.GetNextOnPath(current, map.GetClosestMarket(current));
-		if (to == map.GetClosestMarket(current)) {
-			connection.MoveTrain(train.lineIdx, 0, train.idx);
-			return;
-		}
+		to = map.GetClosestMarket(first);
 	} 
 	else {
-		to = map.GetNextOnPath(current, connection.GetHomeIdx());
-		if (to == connection.GetHomeIdx()) {
-			connection.MoveTrain(train.lineIdx, 0, train.idx);
-			return;
-		}
+		to = map.TranslateVertexIdx(connection.GetHomeIdx());
 	}
 
-	int lineIdx = train.lineIdx;
-	int speed = 0;
-	if (to == map.GetEdgeVertices(train.lineIdx).first) {
-		speed = -1;
-	}
-	else if (to == map.GetEdgeVertices(train.lineIdx).second) {
-		speed = 1;
-	}
-	else {
-		if (current == map.GetEdgeVertices(train.lineIdx).first) {
-			speed = -1;
+	MoveTrainTo(train, to);
+}
+
+void GameWorld::MoveTrainTo(const Train& train, int to) {
+	auto [first, second] = map.GetEdgeVertices(train.lineIdx);
+	if (train.position == 0.0) {
+		to = map.GetNextOnPath(first, to);
+		if (to == first) {
+			connection.MoveTrain(train.lineIdx, 0, train.idx);
+		}
+		else if (to == second) {
+			connection.MoveTrain(train.lineIdx, 1, train.idx);
 		}
 		else {
-			speed = 1;
+			connection.MoveTrain(map.GetEdgeIdx(first, to), -1, train.idx);
 		}
-		lineIdx = map.GetEdgeIdx(current, to);		
 	}
-	connection.MoveTrain(lineIdx, speed, train.idx);
+	else if (train.position == map.GetEdgeLength(train.lineIdx)) {
+		to = map.GetNextOnPath(second, to);
+		if (to == second) {
+			connection.MoveTrain(train.lineIdx, 0, train.idx);
+		}
+		else if (to == first) {
+			connection.MoveTrain(train.lineIdx, -1, train.idx);
+		}
+		else {
+			connection.MoveTrain(map.GetEdgeIdx(second, to), 1, train.idx);
+		}
+	}
+	else {
+		to = map.GetNextOnPath(first, to);
+		if (to == first) {
+			connection.MoveTrain(train.lineIdx, -1, train.idx);
+		}
+		else if (to == second) {
+			connection.MoveTrain(train.lineIdx, 1, train.idx);
+		}
+	}
 }
 
 void GameWorld::TestTrainMove() {
