@@ -12,6 +12,7 @@ struct Post {
 	};
 	Post(PostTypes type, size_t idx, const std::string& name, size_t pointIdx) : type{ type }, idx{ idx }, name{ name }, pointIdx{ pointIdx } {
 	}
+	double refillRate = 0.0;
 	double goodsCapacity = 0.0;
 	double goodsLoad = 0.0;
 	double armorCapacity = 0.0;
@@ -32,6 +33,9 @@ private:
 public:
 	Map(const std::string& jsonStructureData, const std::string& jsonCoordinatesData, const std::string& jsonDynamicData, TextureManager& textureManager);
 	int GetClosestMarket(int from);
+	int GetBestMarket(int from, int homeIdx, double maxLoad, double distanceExtra);
 	void Draw(SdlWindow& window) override;
 	void Update(const std::string& jsonDynamicData); // updated postsInfo
+private:
+	double GetMarketK(int from, int idx, int homeIdx, double maxLoad, double distanceExtra);
 };

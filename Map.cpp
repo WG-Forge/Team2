@@ -11,13 +11,40 @@ Map::Map(const std::string& jsonStructureData, const std::string& jsonCoordinate
 	Update(jsonDynamicData);
 }
 
-int Map::GetClosestMarket(int from)
-{
+int Map::GetClosestMarket(int from) {
 	while (true) {
 		if (posts[(from++) % posts.size()].type == Post::PostTypes::MARKET) {
 			return from - 1;
 		}
 	}
+}
+
+int Map::GetBestMarket(int from, int homeIdx, double maxLoad, double distanceExtra) {
+	double maxTime = posts[homeIdx].goodsLoad / posts[homeIdx].populationLoad;
+	int bestIdx = -1;
+	double bestK = 0;
+	for (int i = 0; i < posts.size(); ++i) {
+		if (posts[i].type != Post::PostTypes::MARKET) {
+			continue;
+		}
+		if (GetDistance(from, i) + GetDistance(i, homeIdx) > maxTime) {
+			continue;
+		}
+		double k = GetMarketK(from, i, homeIdx, maxLoad, distanceExtra);
+		if (k > bestK || bestIdx == -1) {
+			bestIdx = i;
+			bestK = k;
+		}
+	}
+	return bestIdx;
+}
+
+double Map::GetMarketK(int from, int idx, int homeIdx, double maxLoad, double distanceExtra) {
+	double distanceTo = GetDistance(from, idx) + distanceExtra;
+	double distanceFrom = GetDistance(idx, homeIdx);
+	double load = std::min(maxLoad, std::min(posts[idx].goodsCapacity, posts[idx].goodsLoad + posts[idx].refillRate * distanceTo));
+	double gain = load - posts[homeIdx].populationLoad * (distanceTo + distanceFrom);
+	return gain / (distanceFrom + distanceTo);
 }
 
 void Map::Draw(SdlWindow& window) {
@@ -99,6 +126,7 @@ void Map::Update(const std::string& jsonDynamicData) {
 			else if(posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].type == Post::PostTypes::MARKET) {
 				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].goodsCapacity = postMap["product_capacity"].AsDouble();
 				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].goodsLoad = postMap["product"].AsDouble();
+				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].refillRate = postMap["replenishment"].AsDouble();
 			}
 			else if (posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].type == Post::PostTypes::STORAGE) {
 				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].armorCapacity = postMap["armor_capacity"].AsDouble();
