@@ -5,16 +5,19 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
+#include <random>
 
 constexpr int frameTime = 33;
 constexpr double stableThreshold = 20.0;
+
+std::string generateRandomString();
 
 int main(int argC, char** argV) {
 	try {
 		SdlManager manager{};
 		SdlWindow window{ "graph demo", 1280, 960 };
 		TextureManager textureManager = window.CreateTextureManager();
-		GameWorld world{ "team2", textureManager };
+		GameWorld world{ generateRandomString(), textureManager };
 		bool toExit = false;
 		auto lastUpdateTime = std::chrono::high_resolution_clock::now();
 
@@ -69,4 +72,15 @@ int main(int argC, char** argV) {
 	}
 
 	return 0;
+}
+
+std::string generateRandomString()
+{
+	std::random_device rnd{};
+	std::mt19937 random{ rnd() };
+	std::string result;
+	for (int i = 0; i < 16; ++i) {
+		result += 'A' + random() % ('Z' - 'A' + 1);
+	}
+	return result;
 }

@@ -1,6 +1,7 @@
 #include "ServerConnection.h"
 #include "json.h"
 #include <sstream>
+#include <random>
 
 #ifdef _DEBUG
 #include <iostream>
@@ -10,9 +11,20 @@
 constexpr char SERVER_ADDRESS[] = "wgforge-srv.wargaming.net";
 constexpr Uint16 SERVER_PORT = 443;
 
+std::string generateRandomPassword()
+{
+	std::random_device rnd{};
+	std::mt19937 random{ rnd() };
+	std::string result;
+	for (int i = 0; i < 16; ++i) {
+		result += 'A' + random() % ('Z' - 'A' + 1);
+	}
+	return result;
+}
+
 ServerConnection::ServerConnection(const std::string& playerName) {
 	EstablishConnection();
-	SendMessage(Request::LOGIN, "{\"name\":\"" + playerName + "\"}");
+	SendMessage(Request::LOGIN, "{\"name\":\"" + playerName + "\", \"password\":\"" + generateRandomPassword() + "\"}");
 	
 	std::stringstream responseStream = std::stringstream(GetResponse());
 	Json::Dict responseDocument = Json::Load(responseStream).GetRoot().AsMap();
