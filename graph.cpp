@@ -49,6 +49,9 @@ int Graph::GetEdgeIdx(int from, int to) {
 }
 
 int Graph::GetNextOnPath(int from, int to) {	
+	if (from == to) {
+		return to;
+	}
 	if (spTrees[from].empty()) {
 		GenerateSpTree(from);
 	}
@@ -91,7 +94,7 @@ void Graph::GenerateSpTree(int origin) {
 	};
 	auto comparator = [](const dijkstraData& lhs, const dijkstraData& rhs) {return lhs.length > rhs.length; };
 	std::priority_queue<dijkstraData, std::vector<dijkstraData>, decltype(comparator)> dijkstra(comparator);
-	dijkstra.push({ 0, -1, 0 });
+	dijkstra.push({ origin, -1, 0 });
 	for (size_t i = 0; i < adjacencyList.size(); i++) {
 		int cur = dijkstra.top().idx;
 		while (spTrees[origin][cur].length != -1) {
