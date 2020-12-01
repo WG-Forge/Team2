@@ -12,7 +12,7 @@ double GameWorld::ApplyForce()
 	double res = map.ApplyForce();
 	return res;
 }
-
+ 
 void GameWorld::Update() {
 	std::string dynamicObjects = connection.GetMapDynamicObjects();
 	map.Update(dynamicObjects);
@@ -71,7 +71,6 @@ void GameWorld::MoveTrain(Train& train) {
 	else {
 		to = map.TranslateVertexIdx(connection.GetHomeIdx());
 	}
-
 	MoveTrainTo(train, to);
 }
 
@@ -162,15 +161,16 @@ void GameWorld::DrawTrains(SdlWindow& window) {
 		else {
 			toMirror = false;
 		}
-
 		double edgeLength = map.GetEdgeLength(i.lineIdx);
 		double x = a.first + (b.first - a.first) * (i.position / edgeLength);
 		double y = a.second + (b.second - a.second) * (i.position / edgeLength);
-		if (i.speed == 0) {
-			window.DrawTexture(x, y, 40, 40, textureManager["assets\\train_no_move.png"], 0.0, toMirror);
+		SDL_Texture* texture;
+		if (i.speed != 0) {
+			texture = textureManager["assets\\train.png"];
 		}
 		else {
-			window.DrawTexture(x, y, 40, 40, textureManager["assets\\train.png"], 0.0, toMirror);
+			texture = textureManager["assets\\train_no_smoke.png"];
 		}
+		window.DrawTexture(x, y, 40, 40, texture, 0.0, toMirror);
 	}
 }
