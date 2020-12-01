@@ -25,7 +25,7 @@ void GameWorld::Draw(SdlWindow& window) {
 }
 
 void GameWorld::MoveTrains() {
-	for (const auto& i : trains) {
+	for (auto& i : trains) {
 		if (i.owner != connection.GetPlayerIdx()) {
 			continue;
 		}
@@ -33,13 +33,41 @@ void GameWorld::MoveTrains() {
 	}
 }
 
-void GameWorld::MoveTrain(const Train& train) {
+void GameWorld::MoveTrain(Train& train) {
 	int to;
-	auto [first, second] = map.GetEdgeVertices(train.lineIdx);
+	int from;
+	double distanceExtra;
+	double edgeLength = map.GetEdgeLength(train.trueLineIdx);
+	auto [first, second] = map.GetEdgeVertices(train.trueLineIdx);
+
+	if (train.lineIdx != train.trueLineIdx) {
+		auto [firstOld, secondOld] = map.GetEdgeVertices(train.lineIdx);
+		if (first == firstOld) {
+			train.truePosition = 0.0;
+		}
+		else if (first == secondOld) {
+			train.truePosition = 0.0;
+		}
+		else if (second == firstOld) {
+			train.truePosition = edgeLength;
+		}
+		else if (second == secondOld) {
+			train.truePosition = edgeLength;
+		}
+	}
+
+	if (train.truePosition >= edgeLength / 2) {
+		from = second;
+		distanceExtra = train.truePosition - edgeLength;
+	}
+	else {
+		from = first;
+		distanceExtra = train.truePosition;
+	}
 
 	if (train.load < train.capacity) {
-		to = map.GetClosestMarket(first);
-	} 
+		to = map.GetBestMarket(from, map.TranslateVertexIdx(connection.GetHomeIdx()), train.capacity - train.load, distanceExtra);
+	}
 	else {
 		to = map.TranslateVertexIdx(connection.GetHomeIdx());
 	}
@@ -47,66 +75,43 @@ void GameWorld::MoveTrain(const Train& train) {
 	MoveTrainTo(train, to);
 }
 
-void GameWorld::MoveTrainTo(const Train& train, int to) {
-	auto [first, second] = map.GetEdgeVertices(train.lineIdx);
-	if (train.position == 0.0) {
+void GameWorld::MoveTrainTo(Train& train, int to) {
+	auto [first, second] = map.GetEdgeVertices(train.trueLineIdx);
+	if (train.truePosition == 0.0) {
 		to = map.GetNextOnPath(first, to);
 		if (to == first) {
-			connection.MoveTrain(train.lineIdx, 0, train.idx);
+			connection.MoveTrain(train.trueLineIdx, 0, train.idx);
 		}
 		else if (to == second) {
-			connection.MoveTrain(train.lineIdx, 1, train.idx);
+			connection.MoveTrain(train.trueLineIdx, 1, train.idx);
 		}
 		else {
 			connection.MoveTrain(map.GetEdgeIdx(first, to), -1, train.idx);
+			train.trueLineIdx = map.GetEdgeIdx(first, to);
+			MoveTrain(train);
 		}
 	}
-	else if (train.position == map.GetEdgeLength(train.lineIdx)) {
+	else if (train.truePosition == map.GetEdgeLength(train.trueLineIdx)) {
 		to = map.GetNextOnPath(second, to);
 		if (to == second) {
-			connection.MoveTrain(train.lineIdx, 0, train.idx);
+			connection.MoveTrain(train.trueLineIdx, 0, train.idx);
 		}
 		else if (to == first) {
-			connection.MoveTrain(train.lineIdx, -1, train.idx);
+			connection.MoveTrain(train.trueLineIdx, -1, train.idx);
 		}
 		else {
 			connection.MoveTrain(map.GetEdgeIdx(second, to), 1, train.idx);
+			train.trueLineIdx = map.GetEdgeIdx(second, to);
+			MoveTrain(train);
 		}
 	}
 	else {
 		to = map.GetNextOnPath(first, to);
-		if (to == first) {
-			connection.MoveTrain(train.lineIdx, -1, train.idx);
-		}
-		else if (to == second) {
-			connection.MoveTrain(train.lineIdx, 1, train.idx);
-		}
-	}
-}
-
-void GameWorld::TestTrainMove() {
-	static bool dir = true;
-	if (trains.empty()) {
-		return;
-	}
-	Train c_tr = trains[0];
-	std::pair<int, int> path = map.GetEdgeVertices(c_tr.lineIdx);
-	if (dir) {
-		if (c_tr.position == map.GetEdgeLength(c_tr.lineIdx)) {
-			connection.MoveTrain(c_tr.lineIdx, -1, c_tr.idx);
-			dir = !dir;
+		if (to == second) {
+			connection.MoveTrain(train.trueLineIdx, 1, train.idx);
 		}
 		else {
-			connection.MoveTrain(c_tr.lineIdx, 1, c_tr.idx);
-		}
-	}
-	else {
-		if (c_tr.position == 0) {
-			connection.MoveTrain(c_tr.lineIdx, 1, c_tr.idx);
-			dir = !dir;
-		}
-		else {
-			connection.MoveTrain(c_tr.lineIdx, -1, c_tr.idx);
+			connection.MoveTrain(train.trueLineIdx, -1, train.idx);
 		}
 	}
 }

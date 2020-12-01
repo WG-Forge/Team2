@@ -8,12 +8,14 @@ private:
 	public:
 		size_t idx;
 		size_t lineIdx;
+		size_t trueLineIdx;
 		double position;	// may become int
+		double truePosition;
 		double speed;		// may become int
 		double capacity;
 		double load;
 		std::string owner;
-		Train(size_t idx, size_t lineIdx, double position, double speed) : idx{ idx }, lineIdx{ lineIdx }, position{ position }, speed{ speed } {}
+		Train(size_t idx, size_t lineIdx, double position, double speed) : idx{ idx }, lineIdx{ lineIdx }, trueLineIdx{ lineIdx }, position{ position }, truePosition{ position }, speed{ speed } {}
 	};
 	ServerConnection connection;
 	TextureManager& textureManager;
@@ -28,8 +30,8 @@ public:
 	void MakeMove();
 private:
 	void MoveTrains();
-	void MoveTrain(const Train& train);
-	void MoveTrainTo(const Train& train, int to);
+	void MoveTrain(Train& train);
+	void MoveTrainTo(Train& train, int to);
 	void TestTrainMove();
 	void UpdateTrains(const std::string& jsonData);
 	void DrawTrains(SdlWindow& window);
