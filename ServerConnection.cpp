@@ -229,8 +229,9 @@ std::string ServerConnection::GetResponse()
 #ifdef _DEBUG
 		std::cout << response << std::endl;
 #endif
+		std::string err = response;
 		delete[] response;
-		throw buf;
+		throw std::runtime_error{ err };
 	}
 
 	std::string res{ response };
