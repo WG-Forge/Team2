@@ -44,6 +44,7 @@ double Map::GetMarketK(int from, int idx, int homeIdx, double maxLoad, double di
 	double distanceFrom = GetDistance(idx, homeIdx);
 	double load = std::min(maxLoad, std::min(posts[idx].goodsCapacity, posts[idx].goodsLoad + posts[idx].refillRate * distanceTo));
 	double gain = load - posts[homeIdx].populationLoad * (distanceTo + distanceFrom);
+	gain = std::min(gain, posts[homeIdx].goodsCapacity - (posts[homeIdx].goodsLoad - posts[homeIdx].populationLoad * (distanceTo + distanceFrom)));
 	return gain / (distanceFrom + distanceTo);
 }
 
