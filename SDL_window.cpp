@@ -42,13 +42,18 @@ void SdlWindow::DrawRectangle(int x0, int y0, int x1, int y1) {
 	UpdateTarget(x0, y0, x1, y1);
 }
 
-void SdlWindow::DrawTexture(int xMiddle, int yMiddle, int h, int w, SDL_Texture* texture, int absoluteOffsetY) {
+void SdlWindow::DrawTexture(int xMiddle, int yMiddle, int h, int w, SDL_Texture* texture, int absoluteOffsetY, bool toMirror) {
 	SDL_Rect target;
 	target.h = h;
 	target.w = w;
 	target.x = TranslateX(xMiddle) - w / 2;
 	target.y = absoluteOffsetY + TranslateY(yMiddle) - h / 2;
-	SDL_RenderCopy(renderer, texture, NULL, &target);
+	if (toMirror) {
+		SDL_RenderCopyEx(renderer, texture, NULL, &target, 0.0, NULL, SDL_FLIP_HORIZONTAL);
+	}
+	else {
+		SDL_RenderCopyEx(renderer, texture, NULL, &target, 0.0, NULL, SDL_FLIP_NONE);
+	}
 }
 
 void SdlWindow::FillRectangle(int xMiddle, int yMiddle, int h, int w, int absoluteOffsetY) {
