@@ -46,8 +46,8 @@ public:
     int GetEdgeIdx(int from, int to);
     double GetDistance(int from, int to);
     int GetNextOnPath(int from, int to);
-    double GetDistance(int from, int to, const std::unordered_set<int>& blacklist); // no caching
-    int GetNextOnPath(int from, int to, const std::unordered_set<int>& blackList); // no caching
+    double GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
+    int GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
     std::pair<int, int> GetEdgeVertices(int originalEdgeIdx); // returns local from-to idx pair
     double GetEdgeLength(int originalEdgeIdx); // returns length of edge
     std::pair<double, double> GetPointCoord(int localPointIdx); // returns x-y pair
