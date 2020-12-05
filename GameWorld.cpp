@@ -20,6 +20,9 @@ void GameWorld::Draw(SdlWindow& window) {
 
 void GameWorld::MoveTrains() {
 	for (auto& i : trains) {
+		if (i.cooldown != 0) {
+			continue;
+		}
 		if (i.owner != connection.GetPlayerIdx()) {
 			continue;
 		}
@@ -130,6 +133,7 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 		trains[trains.size() - 1].capacity = trainMap["goods_capacity"].AsDouble();
 		trains[trains.size() - 1].load = trainMap["goods"].AsDouble();
 		trains[trains.size() - 1].owner = trainMap["player_idx"].AsString();
+		trains[trains.size() - 1].cooldown = trainMap["cooldown"].AsInt();
 	}
 }
 

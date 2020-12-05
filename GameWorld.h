@@ -14,6 +14,7 @@ private:
 		double speed;		// may become int
 		double capacity;
 		double load;
+		int cooldown;
 		std::string owner;
 		Train(size_t idx, size_t lineIdx, double position, double speed) : idx{ idx }, lineIdx{ lineIdx }, trueLineIdx{ lineIdx }, position{ position }, truePosition{ position }, speed{ speed } {}
 	};
