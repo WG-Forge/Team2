@@ -29,6 +29,12 @@ protected:
     double maxLength = 0;
     std::mutex writeLock;
     std::map<size_t, size_t> idxConverter;
+    std::map<size_t, std::pair<size_t, size_t>> edgesData;
+    struct spData {
+        int prevVertex;
+        double length;
+    };
+    std::vector<std::vector<spData>> spTrees;
     double width;
     double height;
 public:
@@ -36,6 +42,12 @@ public:
     Graph(const std::string& jsonStructureData, const std::string& jsonCoordinatesData);
     int TranslateVertexIdx(size_t idx) const;
     int TranslateEdgeIdx(size_t idx) const;
+    int GetEdgeIdx(int from, int to);
+    double GetDistance(int from, int to);
+    int GetNextOnPath(int from, int to);
+    std::pair<int, int> GetEdgeVertices(int originalEdgeIdx); // returns local from-to idx pair
+    double GetEdgeLength(int originalEdgeIdx); // returns length of edge
+    std::pair<double, double> GetPointCoord(int localPointIdx); // returns x-y pair
     virtual void Draw(SdlWindow& window); // draws current graph
     void DrawEdges(SdlWindow& window);
     double ApplyForce(); // applies forces to vertices
@@ -44,5 +56,7 @@ private:
     void ParseStructure(std::istream& input);
     void ParseCoordinates(std::istream& input);
     void AddEdge(size_t from, Vertex::Edge edge);
+    int GetNextOnPath(const std::vector<spData>& spTree, int from, int to);
+    void GenerateSpTree(int origin);
 };
 

@@ -3,7 +3,7 @@
 #include <cmath>
 #include <fstream>
 #include <sstream>
-
+#include <queue>
 #ifdef _DEBUG
 #include <iostream>
 #endif
@@ -29,6 +29,7 @@ Graph::Graph(const std::string& jsonStructureData, const std::string& jsonCoordi
 		ss << jsonCoordinatesData;
 		ParseCoordinates(ss);
 	}
+	spTrees.resize(adjacencyList.size());
 #ifdef _DEBUG
 	std::cout << "vertex count: " << adjacencyList.size() << std::endl;
 #endif
@@ -38,6 +39,54 @@ int Graph::TranslateVertexIdx(size_t idx) const {
 	return idxConverter.at(idx);
 }
 
+int Graph::GetEdgeIdx(int from, int to) {
+	for (const auto& i : adjacencyList[from].edges) {
+		if (i.to == to) {
+			return i.idx;
+		}
+	}
+	return 0;
+}
+
+double Graph::GetDistance(int from, int to)
+{
+	if (from == to) {
+		return 0.0;
+	}
+	if (spTrees[from].empty()) {
+		GenerateSpTree(from);
+	}
+	return spTrees[from][to].length;
+}
+
+int Graph::GetNextOnPath(int from, int to) {	
+	if (from == to) {
+		return to;
+	}
+	if (spTrees[from].empty()) {
+		GenerateSpTree(from);
+	}
+
+	return GetNextOnPath(spTrees[from], from, to);
+}
+
+std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) {
+	return edgesData[originalEdgeIdx];
+}
+
+double Graph::GetEdgeLength(int originalEdgeIdx) {
+	for (const auto& j : adjacencyList[GetEdgeVertices(originalEdgeIdx).first].edges) {
+		if (j.idx == originalEdgeIdx) {
+			return j.length;
+		}
+	}
+	return 0.0;
+}
+
+std::pair<double, double> Graph::GetPointCoord(int localPointIdx) {
+	return std::pair<double, double>{adjacencyList[localPointIdx].point.x, adjacencyList[localPointIdx].point.y};
+}
+
 void Graph::AddEdge(size_t from, Vertex::Edge edge) {
 	auto pos = std::find_if(begin(adjacencyList[from].edges), end(adjacencyList[from].edges), [edge](const Vertex::Edge& cur) {return cur.to < edge.to; });
 	if (pos == end(adjacencyList[from].edges)) {
@@ -45,6 +94,39 @@ void Graph::AddEdge(size_t from, Vertex::Edge edge) {
 	} else {
 		adjacencyList[from].edges.insert(pos, edge);
 	}
+}
+
+void Graph::GenerateSpTree(int origin) {
+	spTrees[origin].assign(adjacencyList.size(), { -1, -1 });
+	struct dijkstraData {
+		int idx;
+		int prev;
+		double length;
+	};
+	auto comparator = [](const dijkstraData& lhs, const dijkstraData& rhs) {return lhs.length > rhs.length; };
+	std::priority_queue<dijkstraData, std::vector<dijkstraData>, decltype(comparator)> dijkstra(comparator);
+	dijkstra.push({ origin, -1, 0 });
+	for (size_t i = 0; i < adjacencyList.size(); i++) {
+		int cur = dijkstra.top().idx;
+		while (spTrees[origin][cur].length != -1) {
+			dijkstra.pop();
+			cur = dijkstra.top().idx;
+		}
+		spTrees[origin][cur] = { dijkstra.top().prev, dijkstra.top().length };
+		for (const auto& edge : adjacencyList[cur].edges) {
+			if (spTrees[origin][edge.to].length == -1) {
+				dijkstra.push({ static_cast<int>(edge.to), cur, spTrees[origin][cur].length + edge.length });
+			}
+		}
+	}
+}
+
+int Graph::GetNextOnPath(const std::vector<spData>& spTree, int from, int to) {
+	int ans = to;
+	while (spTree[ans].prevVertex != from) {
+		ans = spTree[ans].prevVertex;
+	}
+	return ans;
 }
 
 void Graph::Draw(SdlWindow& window) {
@@ -185,6 +267,7 @@ void Graph::ParseStructure(std::istream& input) {
 		auto edgeMap = edgeNode.AsMap();
 		size_t from = TranslateVertexIdx(edgeMap["points"].AsArray()[0].AsInt());
 		Vertex::Edge edge(edgeMap["idx"].AsInt(), TranslateVertexIdx(edgeMap["points"].AsArray()[1].AsInt()), edgeMap["length"].AsDouble());
+		edgesData[edge.idx] = { from, edge.to };
 		AddEdge(from, edge);
 		std::swap(from, edge.to);
 		AddEdge(from, edge);

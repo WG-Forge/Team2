@@ -9,3 +9,6 @@ cmake-build-debug
 /libpng16-16.dll
 /SDL2_image.dll
 /zlib1.dll
+libjpeg-9.dll
+libtiff-5.dll
+libwebp-7.dll

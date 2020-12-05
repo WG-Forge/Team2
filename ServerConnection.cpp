@@ -1,6 +1,7 @@
 #include "ServerConnection.h"
 #include "json.h"
 #include <sstream>
+#include <random>
 
 #ifdef _DEBUG
 #include <iostream>
@@ -10,17 +11,45 @@
 constexpr char SERVER_ADDRESS[] = "wgforge-srv.wargaming.net";
 constexpr Uint16 SERVER_PORT = 443;
 
+char* inBuf = nullptr;
+size_t inBufSize = 0;
+char* outBuf = nullptr;
+size_t outBufSize = 0;
+
+std::string generateRandomPassword()
+{
+	std::random_device rnd{};
+	std::mt19937 random{ rnd() };
+	std::string result;
+	for (int i = 0; i < 16; ++i) {
+		result += 'A' + random() % ('Z' - 'A' + 1);
+	}
+	return result;
+}
+
 ServerConnection::ServerConnection(const std::string& playerName) {
 	EstablishConnection();
-	SendMessage(Request::LOGIN, "{\"name\":\"" + playerName + "\"}");
+	SendMessage(Request::LOGIN, "{\"name\":\"" + playerName + "\", \"password\":\"" + generateRandomPassword() + "\"}");
 	
 	std::stringstream responseStream = std::stringstream(GetResponse());
 	Json::Dict responseDocument = Json::Load(responseStream).GetRoot().AsMap();
 	playerIdx = responseDocument["idx"].AsString();
+	auto home = responseDocument["home"].AsMap();
+	homeIdx = home["idx"].AsInt();
+}
+
+int ServerConnection::GetHomeIdx() {
+	return homeIdx;
 }
 
 std::string ServerConnection::GetPlayerIdx() {
 	return playerIdx;
+}
+
+std::string ServerConnection::GetGameState()
+{
+	SendMessage(Request::GAMES, "");
+	return GetResponse();
 }
 
 std::string ServerConnection::GetMapStaticObjects() {
@@ -34,26 +63,28 @@ std::string ServerConnection::GetMapDynamicObjects() {
 }
 
 std::string ServerConnection::GetMapCoordinates() {
+	std::string buf;
 	try {
 		SendMessage(Request::MAP, "{\"layer\":10}");
-		std::string buf = GetResponse();
-		std::cout << "COORDINATES RESPONCE IS WORKING NOW!!!" << std::endl;
-		return buf;
+		buf = GetResponse();
 	}
 	catch (...) {
 		return "{\"coordinates\": [], \"size\": [0,0]}"; // i guess server does not suppor it at the moment
 	}
+	throw std::runtime_error{ "Tell Pasha that layer 10 is working now" };
 }
 
 void ServerConnection::MoveTrain(size_t lineIdx, int speed, size_t trainIdx) {
-	Json::Dict moveDict;
-	moveDict["line_idx"] = static_cast<int>(lineIdx);
-	moveDict["speed"] = speed;
-	moveDict["train_idx"] = static_cast<int>(trainIdx);
-	Json::Document doc{ moveDict };
-	std::stringstream out;
-	Json::Print(doc, out);
-	std::string jsonRequest = out.str();
+	SendMessage(ServerConnection::Request::MOVE, 
+		"{\"line_idx\": " + std::to_string(lineIdx) +
+		",\"speed\": " + std::to_string(speed) +
+		", \"train_idx\": " + std::to_string(trainIdx) + "}");
+	GetResponse();
+}
+
+void ServerConnection::EndTurn() {
+	SendMessage(Request::TURN, "");
+	GetResponse();
 }
 
 void ServerConnection::Upgrade(std::vector<size_t> postIdxes, std::vector<size_t> trainIdxes) {
@@ -93,10 +124,16 @@ void ServerConnection::EstablishConnection() {
 }
 
 void ServerConnection::SendMessage(Request actionCode, const std::string& data) {
-	char* frame = new char[8 + data.size()];
+	if (inBufSize < 8 + data.size()) {
+		if (inBuf) {
+			delete[] inBuf;
+		}
+		inBuf = new char[8 + data.size()];
+		inBufSize = 8 + data.size();
+	}
 	Uint32 code = (Uint32)actionCode;
 	size_t index = 0;
-	unsigned char* frame_header = (unsigned char*)frame;
+	unsigned char* frame_header = (unsigned char*)inBuf;
 #ifdef _DEBUG
 	std::cout << std::endl;
 	std::cout << "------send-------" << std::endl;
@@ -129,19 +166,28 @@ void ServerConnection::SendMessage(Request actionCode, const std::string& data) 
 	std::cout << std::endl;
 #endif
 	for (int i = 0; i < data.size(); ++i, ++index) {
-		frame[index] = data[i];
+		inBuf[index] = data[i];
 	}
-	if (SDLNet_TCP_Send(socket, frame, 8 + data.size()) < 8 + data.size()) {
+	if (SDLNet_TCP_Send(socket, inBuf, 8 + data.size()) < 8 + data.size()) {
 		throw std::runtime_error{ SDLNet_GetError() };
 	}
 }
 
-std::string ServerConnection::GetResponse()
-{
-	Uint8 data[4];
-	if (SDLNet_TCP_Recv(socket, data, 4) < 4) {
-		throw std::runtime_error{ SDLNet_GetError() };
+std::string ServerConnection::GetResponse() {
+	Uint8 data[8];
+	{
+		size_t left = 8;
+		Uint8* buf = data;
+		while (left > 0) {
+			int got = SDLNet_TCP_Recv(socket, buf, 4);
+			if (got < 0) {
+				throw std::runtime_error{ SDLNet_GetError() };
+			}
+			buf += got;
+			left -= got;
+		}
 	}
+
 	Uint32 responseCode = 0;
 	for (int i = 0; i < 4; ++i) {
 		responseCode |= data[i] << i * 8;
@@ -177,16 +223,13 @@ std::string ServerConnection::GetResponse()
 		buf = Result::INTERNAL_SERVER_ERROR;
 		break;
 	}
-	if (SDLNet_TCP_Recv(socket, data, 4) < 4) {
-		throw std::runtime_error{ SDLNet_GetError() };
-	}
 	Uint32 size = 0;
-	for (int i = 3; i >= 0; --i) {
+	for (int i = 7; i >= 4; --i) {
 		size = (size << 8) | data[i];
 	}
 #ifdef _DEBUG
 	std::cout << "size: ";
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 4; i < 8; ++i) {
 		std::cout << std::hex << std::setw(2) << (unsigned int)data[i] << ' ';
 	}
 	std::cout << std::endl;
@@ -194,9 +237,15 @@ std::string ServerConnection::GetResponse()
 	std::cout << "size = " << size << std::endl;
 #endif
 
-	char* response = new char[size + 1];
-	char* writeBuf = response;
-	response[size] = '\0';
+	if (outBufSize < size + 1ull) {
+		if (outBuf) {
+			delete[] outBuf;
+		}
+		outBuf = new char[size + 1ull];
+		outBufSize = size + 1ull;
+	}
+	char* writeBuf = outBuf;
+	outBuf[size] = '\0';
 	while (size > 0) {
 		int got = SDLNet_TCP_Recv(socket, writeBuf, size);
 #ifdef _DEBUG
@@ -207,11 +256,12 @@ std::string ServerConnection::GetResponse()
 	}
 
 	if (buf != Result::OKEY) {
-		delete[] response;
-		throw buf;
+#ifdef _DEBUG
+		std::cout << outBuf << std::endl;
+#endif
+		std::string err = outBuf;
+		throw std::runtime_error{ err };
 	}
 
-	std::string res{ response };
-	delete[] response;
-	return res;
+	return outBuf;
 }

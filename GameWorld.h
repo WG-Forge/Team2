@@ -5,13 +5,17 @@
 class GameWorld {
 private:
 	class Train {
-	private:
+	public:
 		size_t idx;
 		size_t lineIdx;
+		size_t trueLineIdx;
 		double position;	// may become int
+		double truePosition;
 		double speed;		// may become int
-	public:
-		Train(size_t idx, size_t lineIdx, double position, double speed) : idx{ idx }, lineIdx{ lineIdx }, position{ position }, speed{ speed } {}
+		double capacity;
+		double load;
+		std::string owner;
+		Train(size_t idx, size_t lineIdx, double position, double speed) : idx{ idx }, lineIdx{ lineIdx }, trueLineIdx{ lineIdx }, position{ position }, truePosition{ position }, speed{ speed } {}
 	};
 	ServerConnection connection;
 	TextureManager& textureManager;
@@ -23,7 +27,12 @@ public:
 	double ApplyForce();
 	void Update(); // updates map and trains
 	void Draw(SdlWindow& window);
+	void MakeMove();
 private:
+	void MoveTrains();
+	void MoveTrain(Train& train);
+	void MoveTrainTo(Train& train, int to);
+	void TestTrainMove();
 	void UpdateTrains(const std::string& jsonData);
 	void DrawTrains(SdlWindow& window);
 };
