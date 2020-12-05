@@ -27,6 +27,7 @@ void GameWorld::MoveTrains() {
 			continue;
 		}
 		MoveTrain(i);
+		break;
 	}
 }
 
