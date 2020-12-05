@@ -40,13 +40,6 @@ int main(int argC, char** argV) {
 			}
 		} };
 
-		std::thread forceThread{ [&world, &toExit]() {
-			double change = stableThreshold;
-			while (!toExit && change >= stableThreshold) {
-				change = world.ApplyForce();
-			}
-		} };
-
 		while (!(toExit = window.HasCloseRequest())) {
 			window.SetDrawColor(35, 23, 0);
 			window.Clear();
@@ -61,7 +54,6 @@ int main(int argC, char** argV) {
 		}
 		window.Close();
 		updateThread.join();
-		forceThread.join();
 	}
 	catch (const std::runtime_error& error) {
 		std::cout << "got unexpected error: " << error.what() << std::endl;
