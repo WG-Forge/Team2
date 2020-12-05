@@ -6,12 +6,6 @@ GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManag
 		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
 	UpdateTrains(connection.GetMapDynamicObjects());
 }
-
-double GameWorld::ApplyForce()
-{
-	double res = map.ApplyForce();
-	return res;
-}
  
 void GameWorld::Update() {
 	std::string dynamicObjects = connection.GetMapDynamicObjects();

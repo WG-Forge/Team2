@@ -24,7 +24,6 @@ private:
 	std::map<size_t, size_t> trainIdxConverter;
 public:
 	GameWorld(const std::string& playerName, TextureManager& textureManager);
-	double ApplyForce();
 	void Update(); // updates map and trains
 	void Draw(SdlWindow& window);
 	void MakeMove();
@@ -32,7 +31,6 @@ private:
 	void MoveTrains();
 	void MoveTrain(Train& train);
 	void MoveTrainTo(Train& train, int to);
-	void TestTrainMove();
 	void UpdateTrains(const std::string& jsonData);
 	void DrawTrains(SdlWindow& window);
 };

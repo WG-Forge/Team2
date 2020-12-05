@@ -53,7 +53,6 @@ public:
     std::pair<double, double> GetPointCoord(int localPointIdx); // returns x-y pair
     virtual void Draw(SdlWindow& window); // draws current graph
     void DrawEdges(SdlWindow& window);
-    double ApplyForce(); // applies forces to vertices
     virtual ~Graph() = default;
 private:
     void ParseStructure(std::istream& input);
