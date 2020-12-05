@@ -280,7 +280,7 @@ void Graph::ParseCoordinates(std::istream& input) {
 	auto nodeMap = document.GetRoot().AsMap();
 	for (const auto& node : nodeMap["coordinates"].AsArray()) {
 		auto coordMap = node.AsMap();
-		size_t curIdx = coordMap["idx"].AsInt();
+		size_t curIdx = TranslateVertexIdx(coordMap["idx"].AsInt());
 		adjacencyList[curIdx].point.x = coordMap["x"].AsDouble();
 		adjacencyList[curIdx].point.y = coordMap["y"].AsDouble();
 	}
