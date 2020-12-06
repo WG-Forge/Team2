@@ -86,6 +86,10 @@ int Map::GetBestStorage(int from, int homeIdx, double maxLoad, double distanceEx
 	return bestIdx;
 }
 
+int Map::GetArmor(int idx) {
+	return posts[idx].armorLoad;
+}
+
 double Map::GetMarketK(int from, int idx, int homeIdx, double maxLoad, double distanceExtra) {
 	double distanceTo = *GetDistance(from, idx, storages) + distanceExtra;
 	double distanceFrom = GetDistance(idx, homeIdx);
