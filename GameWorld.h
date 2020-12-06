@@ -9,6 +9,7 @@ private:
 		size_t idx;
 		size_t lineIdx;
 		size_t trueLineIdx;
+		int level;
 		double position;	// may become int
 		double truePosition;
 		double speed;		// may become int
@@ -18,6 +19,7 @@ private:
 		std::string owner;
 		Train(size_t idx, size_t lineIdx, double position, double speed) : idx{ idx }, lineIdx{ lineIdx }, trueLineIdx{ lineIdx }, position{ position }, truePosition{ position }, speed{ speed } {}
 	};
+	bool allTrainsUpgraded = false;
 	ServerConnection connection;
 	TextureManager& textureManager;
 	Map map;

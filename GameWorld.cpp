@@ -1,6 +1,9 @@
 #include "GameWorld.h"
 #include <sstream>
 #include "json.h"
+#include <unordered_set>
+
+std::unordered_set<int> taken;
 
 GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManager) : connection{ playerName },	textureManager{textureManager},
 		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
@@ -19,6 +22,7 @@ void GameWorld::Draw(SdlWindow& window) {
 }
 
 void GameWorld::MoveTrains() {
+	taken.clear();
 	for (auto& i : trains) {
 		if (i.cooldown != 0) {
 			continue;
@@ -27,14 +31,12 @@ void GameWorld::MoveTrains() {
 			continue;
 		}
 		MoveTrain(i);
-		break;
 	}
 }
 
 void GameWorld::MoveTrain(Train& train) {
 	int to;
 	int from;
-	double distanceExtra;
 	double edgeLength = map.GetEdgeLength(train.trueLineIdx);
 	auto [first, second] = map.GetEdgeVertices(train.trueLineIdx);
 
@@ -56,15 +58,19 @@ void GameWorld::MoveTrain(Train& train) {
 
 	if (train.truePosition >= edgeLength / 2) {
 		from = second;
-		distanceExtra = train.truePosition - edgeLength;
 	}
 	else {
 		from = first;
-		distanceExtra = train.truePosition;
 	}
 
 	if (train.load < train.capacity) {
-		to = map.GetBestMarket(from, map.TranslateVertexIdx(connection.GetHomeIdx()), train.capacity - train.load, distanceExtra);
+		if (allTrainsUpgraded) {
+			to = map.GetBestMarket(from, map.TranslateVertexIdx(connection.GetHomeIdx()), train.capacity - train.load, 0, taken);
+		}
+		else {
+			to = map.GetBestStorage(from, map.TranslateVertexIdx(connection.GetHomeIdx()), train.capacity - train.load, 0, taken);
+		}
+		taken.insert(to);
 	}
 	else {
 		to = map.TranslateVertexIdx(connection.GetHomeIdx());
@@ -85,7 +91,7 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 		else {
 			connection.MoveTrain(map.GetEdgeIdx(first, to), -1, train.idx);
 			train.trueLineIdx = map.GetEdgeIdx(first, to);
-			MoveTrain(train);
+			//MoveTrain(train);
 		}
 	}
 	else if (train.truePosition == map.GetEdgeLength(train.trueLineIdx)) {
@@ -99,7 +105,7 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 		else {
 			connection.MoveTrain(map.GetEdgeIdx(second, to), 1, train.idx);
 			train.trueLineIdx = map.GetEdgeIdx(second, to);
-			MoveTrain(train);
+			//MoveTrain(train);
 		}
 	}
 	else {
@@ -126,6 +132,7 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 	trainIdxConverter.clear();
 	trains.clear();
 	trains.reserve(nodeMap["trains"].AsArray().size());
+	allTrainsUpgraded = true;
 	for (const auto& node : nodeMap["trains"].AsArray()) {
 		auto trainMap = node.AsMap();
 		trainIdxConverter[trainMap["idx"].AsInt()] = trains.size();
@@ -135,6 +142,12 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 		trains[trains.size() - 1].load = trainMap["goods"].AsDouble();
 		trains[trains.size() - 1].owner = trainMap["player_idx"].AsString();
 		trains[trains.size() - 1].cooldown = trainMap["cooldown"].AsInt();
+		trains[trains.size() - 1].level = trainMap["level"].AsInt();
+		if (trains[trains.size() - 1].owner == connection.GetPlayerIdx()) {
+			if (trains[trains.size() - 1].level < 3) {
+				allTrainsUpgraded = false;
+			}
+		}
 	}
 }
 
