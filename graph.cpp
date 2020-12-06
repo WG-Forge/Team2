@@ -129,10 +129,10 @@ std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordere
 	std::priority_queue<dijkstraData, std::vector<dijkstraData>, decltype(comparator)> dijkstra(comparator);
 	dijkstra.push({ origin, -1, 0 });
 	for (size_t i = 0; i < adjacencyList.size(); i++) {
-		int cur = dijkstra.top().idx;
+		int cur = origin;
 		while (((ans[cur].length != -1) || (verticesBlackList.count(cur) != 0)) && (!dijkstra.empty())) {
-			dijkstra.pop();
 			cur = dijkstra.top().idx;
+			dijkstra.pop();
 		}
 		if (dijkstra.empty()) {
 			break;
