@@ -54,7 +54,7 @@ double Graph::GetDistance(int from, int to)
 		return 0.0;
 	}
 	if (spTrees[from].empty()) {
-		GenerateSpTree(from);
+		spTrees[from] = GenerateSpTree(from);
 	}
 	return spTrees[from][to].length;
 }
@@ -64,10 +64,32 @@ int Graph::GetNextOnPath(int from, int to) {
 		return to;
 	}
 	if (spTrees[from].empty()) {
-		GenerateSpTree(from);
+		spTrees[from] = GenerateSpTree(from);
 	}
 
 	return GetNextOnPath(spTrees[from], from, to);
+}
+
+std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList) {
+	if (from == to) {
+		return to;
+	}
+	auto ans = GenerateSpTree(from, verticesBlackList);
+	if (ans[to].length == -1) {
+		return std::nullopt;
+	}
+	return ans[to].length;
+}
+
+std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList) {
+	if (from == to) {
+		return to;
+	}
+	auto ans = GenerateSpTree(from, verticesBlackList);
+	if (ans[to].length == -1) {
+		return std::nullopt;
+	}
+	return GetNextOnPath(ans, from, to);
 }
 
 std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) {
@@ -96,8 +118,8 @@ void Graph::AddEdge(size_t from, Vertex::Edge edge) {
 	}
 }
 
-void Graph::GenerateSpTree(int origin) {
-	spTrees[origin].assign(adjacencyList.size(), { -1, -1 });
+std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList) {
+	std::vector <spData> ans(adjacencyList.size(), { -1, -1 });
 	struct dijkstraData {
 		int idx;
 		int prev;
@@ -108,17 +130,21 @@ void Graph::GenerateSpTree(int origin) {
 	dijkstra.push({ origin, -1, 0 });
 	for (size_t i = 0; i < adjacencyList.size(); i++) {
 		int cur = dijkstra.top().idx;
-		while (spTrees[origin][cur].length != -1) {
+		while (((ans[cur].length != -1) || (verticesBlackList.count(cur) != 0)) && (!dijkstra.empty())) {
 			dijkstra.pop();
 			cur = dijkstra.top().idx;
 		}
-		spTrees[origin][cur] = { dijkstra.top().prev, dijkstra.top().length };
+		if (dijkstra.empty()) {
+			break;
+		}
+		ans[cur] = { dijkstra.top().prev, dijkstra.top().length };
 		for (const auto& edge : adjacencyList[cur].edges) {
-			if (spTrees[origin][edge.to].length == -1) {
-				dijkstra.push({ static_cast<int>(edge.to), cur, spTrees[origin][cur].length + edge.length });
+			if (ans[edge.to].length == -1) {
+				dijkstra.push({ static_cast<int>(edge.to), cur, ans[cur].length + edge.length });
 			}
 		}
 	}
+	return ans;
 }
 
 int Graph::GetNextOnPath(const std::vector<spData>& spTree, int from, int to) {

@@ -46,8 +46,8 @@ public:
     int GetEdgeIdx(int from, int to);
     double GetDistance(int from, int to);
     int GetNextOnPath(int from, int to);
-    double GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
-    int GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
+    std::optional<double> GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
+    std::optional<int> GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
     std::pair<int, int> GetEdgeVertices(int originalEdgeIdx); // returns local from-to idx pair
     double GetEdgeLength(int originalEdgeIdx); // returns length of edge
     std::pair<double, double> GetPointCoord(int localPointIdx); // returns x-y pair
@@ -59,6 +59,6 @@ private:
     void ParseCoordinates(std::istream& input);
     void AddEdge(size_t from, Vertex::Edge edge);
     int GetNextOnPath(const std::vector<spData>& spTree, int from, int to);
-    void GenerateSpTree(int origin);
+    std::vector <spData> GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList = {});
 };
 
