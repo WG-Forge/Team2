@@ -74,7 +74,7 @@ std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_
 	if (from == to) {
 		return to;
 	}
-	auto ans = GenerateSpTree(from, verticesBlackList);
+ 	auto ans = GenerateSpTree(from, verticesBlackList);
 	if (ans[to].length == -1) {
 		return std::nullopt;
 	}
@@ -129,18 +129,18 @@ std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordere
 	std::priority_queue<dijkstraData, std::vector<dijkstraData>, decltype(comparator)> dijkstra(comparator);
 	dijkstra.push({ origin, -1, 0 });
 	for (size_t i = 0; i < adjacencyList.size(); i++) {
-		int cur = origin;
-		while (((ans[cur].length != -1) || (verticesBlackList.count(cur) != 0)) && (!dijkstra.empty())) {
-			cur = dijkstra.top().idx;
+		dijkstraData cur = { origin, -1, 0 };
+		while (((ans[cur.idx].length != -1) || (verticesBlackList.count(cur.idx) != 0)) && (!dijkstra.empty())) {
+			cur = dijkstra.top();
 			dijkstra.pop();
 		}
 		if (dijkstra.empty()) {
 			break;
 		}
-		ans[cur] = { dijkstra.top().prev, dijkstra.top().length };
-		for (const auto& edge : adjacencyList[cur].edges) {
+		ans[cur.idx] = { cur.prev, cur.length };
+		for (const auto& edge : adjacencyList[cur.idx].edges) {
 			if (ans[edge.to].length == -1) {
-				dijkstra.push({ static_cast<int>(edge.to), cur, ans[cur].length + edge.length });
+				dijkstra.push({ static_cast<int>(edge.to), cur.idx, ans[cur.idx].length + edge.length });
 			}
 		}
 	}
