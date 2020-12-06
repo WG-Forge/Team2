@@ -30,12 +30,16 @@ private:
 	TextureManager& textureManager;
 	std::map<size_t, size_t> postIdxConverter;
 	std::vector <Post> posts;
+	std::unordered_set<int> markets;
+	std::unordered_set<int> storages;
 public:
 	Map(const std::string& jsonStructureData, const std::string& jsonCoordinatesData, const std::string& jsonDynamicData, TextureManager& textureManager);
 	int GetClosestMarket(int from);
-	int GetBestMarket(int from, int homeIdx, double maxLoad, double distanceExtra);
+	int GetBestMarket(int from, int homeIdx, double maxLoad, double distanceExtra, const std::unordered_set<int>& blackList = {});
+	int GetBestStorage(int from, int homeIdx, double maxLoad, double distanceExtra, const std::unordered_set<int>& blackList = {});
 	void Draw(SdlWindow& window) override;
 	void Update(const std::string& jsonDynamicData); // updated postsInfo
 private:
 	double GetMarketK(int from, int idx, int homeIdx, double maxLoad, double distanceExtra);
+	double GetStorageK(int from, int idx, int homeIdx, double maxLoad, double distanceExtra);
 };
