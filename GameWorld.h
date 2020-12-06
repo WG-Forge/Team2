@@ -10,6 +10,7 @@ private:
 		size_t lineIdx;
 		size_t trueLineIdx;
 		int level;
+		int nextLevelPrice;
 		double position;	// may become int
 		double truePosition;
 		double speed;		// may become int
