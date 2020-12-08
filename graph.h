@@ -71,6 +71,6 @@ private:
     void ParseCoordinates(std::istream& input);
     void AddEdge(size_t from, Vertex::Edge edge);
     int GetNextOnPath(const std::vector<spData>& spTree, int from, int to);
-    std::vector <spData> GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList = {});
+    std::vector <spData> GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList = {}, const std::unordered_set<std::pair<int, int>>& edgesBlackList = {});
 };
 

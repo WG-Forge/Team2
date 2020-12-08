@@ -87,11 +87,25 @@ std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_s
 }
 
 std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<std::pair<int, int>>& edgesBlackList) {
-	return GetDistance(from, to, verticesBlackList);
+	if (from == to) {
+		return to;
+	}
+	auto ans = GenerateSpTree(from, verticesBlackList, edgesBlackList);
+	if (ans[to].length == -1) {
+		return std::nullopt;
+	}
+	return ans[to].length;
 }
 
 std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<std::pair<int, int>>& edgesBlackList) {
-	return GetNextOnPath(from, to, verticesBlackList);
+	if (from == to) {
+		return to;
+	}
+	auto ans = GenerateSpTree(from, verticesBlackList, edgesBlackList);
+	if (ans[to].length == -1) {
+		return std::nullopt;
+	}
+	return GetNextOnPath(ans, from, to);
 }
 
 std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) {
@@ -120,7 +134,7 @@ void Graph::AddEdge(size_t from, Vertex::Edge edge) {
 	}
 }
 
-std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList) {
+std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<std::pair<int, int>>& edgesBlackList) {
 	std::vector <spData> ans(adjacencyList.size(), { -1, -1 });
 	struct dijkstraData {
 		int idx;
@@ -132,7 +146,8 @@ std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordere
 	dijkstra.push({ origin, -1, 0 });
 	for (size_t i = 0; i < adjacencyList.size(); i++) {
 		dijkstraData cur = { origin, -1, 0 };
-		while (((ans[cur.idx].length != -1) || (verticesBlackList.count(cur.idx) != 0)) && (!dijkstra.empty())) {
+		while (((ans[cur.idx].length != -1) || (verticesBlackList.count(cur.idx) != 0) || 
+			(edgesBlackList.count(std::make_pair(cur.prev, cur.idx)))) && (!dijkstra.empty())) {
 			cur = dijkstra.top();
 			dijkstra.pop();
 		}
