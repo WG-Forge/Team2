@@ -38,6 +38,8 @@ public:
 	int GetBestMarket(int from, int homeIdx, double maxLoad, double distanceExtra, const std::unordered_set<int>& blackList = {});
 	int GetBestStorage(int from, int homeIdx, double maxLoad, double distanceExtra, const std::unordered_set<int>& blackList = {});
 	int GetArmor(int idx);
+	std::unordered_set<int> GetMarkets();
+	std::unordered_set<int> GetStorages();
 	void Draw(SdlWindow& window) override;
 	void Update(const std::string& jsonDynamicData); // updated postsInfo
 private:

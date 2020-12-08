@@ -90,6 +90,10 @@ int Map::GetArmor(int idx) {
 	return posts[idx].armorLoad;
 }
 
+std::unordered_set<int> Map::GetMarkets() {
+	return markets;
+}
+
 double Map::GetMarketK(int from, int idx, int homeIdx, double maxLoad, double distanceExtra) {
 	double distanceTo = *GetDistance(from, idx, storages) + distanceExtra;
 	double distanceFrom = GetDistance(idx, homeIdx);
@@ -105,6 +109,10 @@ double Map::GetStorageK(int from, int idx, int homeIdx, double maxLoad, double d
 	double load = std::min(maxLoad, std::min(posts[idx].goodsCapacity, posts[idx].goodsLoad + posts[idx].refillRate * distanceTo));
 	double gain = std::min(load, posts[homeIdx].armorCapacity - posts[homeIdx].armorLoad);
 	return gain / (distanceFrom + distanceTo);
+}
+
+std::unordered_set<int> Map::GetStorages() {
+	return storages;
 }
 
 void Map::Draw(SdlWindow& window) {
