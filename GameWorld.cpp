@@ -36,7 +36,7 @@ void GameWorld::MoveTrains() {
 			continue;
 		}
 		MoveTrain(i);
-		break;
+		//break;
 	}
 }
 
@@ -107,7 +107,7 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 		else {
 			connection.MoveTrain(map.GetEdgeIdx(first, to), -1, train.idx);
 			train.trueLineIdx = map.GetEdgeIdx(first, to);
-			//MoveTrain(train);
+			MoveTrain(train);
 		}
 	}
 	else if (train.truePosition == map.GetEdgeLength(train.trueLineIdx)) {
@@ -128,7 +128,7 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 		else {
 			connection.MoveTrain(map.GetEdgeIdx(second, to), 1, train.idx);
 			train.trueLineIdx = map.GetEdgeIdx(second, to);
-			//MoveTrain(train);
+			MoveTrain(train);
 		}
 	}
 	else {
