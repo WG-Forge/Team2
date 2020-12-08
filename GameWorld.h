@@ -4,6 +4,9 @@
 
 class GameWorld {
 private:
+
+	using TrainMoveData = std::tuple<int, int, int>;
+
 	class Train {
 	public:
 		size_t idx;
@@ -20,6 +23,8 @@ private:
 		std::string owner;
 		Train(size_t idx, size_t lineIdx, double position, double speed) : idx{ idx }, lineIdx{ lineIdx }, trueLineIdx{ lineIdx }, position{ position }, truePosition{ position }, speed{ speed } {}
 	};
+
+	std::vector<ServerConnection> helpConnections;
 	bool allTrainsUpgraded = false;
 	ServerConnection connection;
 	TextureManager& textureManager;
@@ -36,8 +41,8 @@ public:
 	void MakeMove();
 private:
 	void MoveTrains();
-	void MoveTrain(Train& train);
-	void MoveTrainTo(Train& train, int to);
+	TrainMoveData MoveTrain(Train& train);
+	TrainMoveData MoveTrainTo(Train& train, int to);
 	void UpdateTrains(const std::string& jsonData);
 	void DrawTrains(SdlWindow& window);
 };

@@ -11,6 +11,16 @@
 #endif
 #endif
 
+void makeMoveRequest(int lineIdx, int speed, int trainIdx, ServerConnection& connection) {
+	try {
+		connection.MoveTrain(lineIdx, speed, trainIdx);
+	}
+	catch (std::runtime_error& error) {
+		std::cout << error.what() << std::endl;
+		throw;
+	}
+}
+
 GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManager) : connection{ playerName },	textureManager{textureManager},
 		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
 	UpdateTrains(connection.GetMapDynamicObjects());
@@ -28,6 +38,9 @@ void GameWorld::Draw(SdlWindow& window) {
 }
 
 void GameWorld::MoveTrains() {
+	std::vector<std::thread> helpThreads;
+	std::vector<TrainMoveData> moveData;
+	int trainsCount = 0;
 	for (auto& i : trains) {
 		if (i.cooldown != 0) {
 			continue;
@@ -35,11 +48,21 @@ void GameWorld::MoveTrains() {
 		if (i.owner != connection.GetPlayerIdx()) {
 			continue;
 		}
-		MoveTrain(i);
+		++trainsCount;
+		moveData.push_back(MoveTrain(i));
+	}
+	while (helpConnections.size() < trainsCount) {
+		helpConnections.emplace_back(connection.GetLogin(), connection.GetPassword());
+	}
+	for (int i = 0; i < trainsCount; ++i) {
+		helpThreads.emplace_back(makeMoveRequest, std::get<0>(moveData[i]), std::get<1>(moveData[i]), std::get<2>(moveData[i]), std::ref(helpConnections[i]));
+	}
+	for (int i = 0; i < trainsCount; ++i) {
+		helpThreads[i].join();
 	}
 }
 
-void GameWorld::MoveTrain(Train& train) {
+GameWorld::TrainMoveData GameWorld::MoveTrain(Train& train) {
 	int to;
 	int from;
 	double edgeLength = map.GetEdgeLength(train.trueLineIdx);
@@ -83,10 +106,10 @@ void GameWorld::MoveTrain(Train& train) {
 		}
 		to = map.TranslateVertexIdx(connection.GetHomeIdx());
 	}
-	MoveTrainTo(train, to);
+	return MoveTrainTo(train, to);
 }
 
-void GameWorld::MoveTrainTo(Train& train, int to) {
+GameWorld::TrainMoveData GameWorld::MoveTrainTo(Train& train, int to) {
 	auto [first, second] = map.GetEdgeVertices(train.trueLineIdx);
 	if (train.truePosition == 0.0) {
 #ifdef _PATHFINDING_DEBUG
@@ -98,14 +121,14 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 		std::cout << "; via: " << to << std::endl;
 #endif
 		if (to == first) {
-			connection.MoveTrain(train.trueLineIdx, 0, train.idx);
+			return { train.trueLineIdx, 0, train.idx };
 		}
 		else if (to == second) {
-			connection.MoveTrain(train.trueLineIdx, 1, train.idx);
+			return { train.trueLineIdx, 1, train.idx };
 		}
 		else {
 			train.trueLineIdx = map.GetEdgeIdx(first, to);
-			MoveTrain(train);
+			return MoveTrain(train);
 		}
 	}
 	else if (train.truePosition == map.GetEdgeLength(train.trueLineIdx)) {
@@ -118,22 +141,22 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 		std::cout << "; via: " << to << std::endl;
 #endif
 		if (to == second) {
-			connection.MoveTrain(train.trueLineIdx, 0, train.idx);
+			return { train.trueLineIdx, 0, train.idx };
 		}
 		else if (to == first) {
-			connection.MoveTrain(train.trueLineIdx, -1, train.idx);
+			return { train.trueLineIdx, -1, train.idx };
 		}
 		else {
 			train.trueLineIdx = map.GetEdgeIdx(second, to);
-			MoveTrain(train);
+			return MoveTrain(train);
 		}
 	}
 	else {
 		if (train.speed > 0) {
-			connection.MoveTrain(train.trueLineIdx, 1, train.idx);
+			return { train.trueLineIdx, 1, train.idx };
 		}
 		else if (train.speed < 0){
-			connection.MoveTrain(train.trueLineIdx, -1, train.idx);
+			return { train.trueLineIdx, -1, train.idx };
 		}
 	}
 }
