@@ -98,6 +98,8 @@ void ServerConnection::Upgrade(std::vector<size_t> postIdxes, std::vector<size_t
 	Json::Document doc{ upgradeDict };
 	Json::Print(doc, out);
 	std::string jsonRequest = out.str();
+	SendMessage(Request::UPGRADE, jsonRequest);
+	GetResponse();
 }
 
 ServerConnection::~ServerConnection() {
