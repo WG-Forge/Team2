@@ -4,7 +4,7 @@
 #include <SDL_net.h>
 
 class ServerConnection { 
-private:
+protected:
 	enum class Request {
 		LOGIN = 1,
 		LOGOUT = 2,
@@ -18,7 +18,11 @@ private:
 
 	TCPsocket socket;
 	std::string playerIdx;
+	std::string login;
+	std::string password;
 	int homeIdx;
+	bool isStrong;
+	bool isOriginal;
 public:
 	enum class Result {
 		OKEY = 0,
@@ -30,14 +34,19 @@ public:
 		INTERNAL_SERVER_ERROR = 500
 	};
 
-	ServerConnection(const std::string& playerName); // performs login operation
+	ServerConnection(const std::string& playerName, bool isStrong = true); // performs login operation
+	ServerConnection(const std::string& playerName, const std::string& playerPassword, bool isStrong = false);
+	ServerConnection(const ServerConnection& other) = delete;
+	ServerConnection(ServerConnection&& other) noexcept;
 	std::string GetMapStaticObjects();
 	std::string GetMapDynamicObjects();
 	std::string GetMapCoordinates();
 	std::string GetGameState();
 
 	int GetHomeIdx();
-	std::string GetPlayerIdx();
+	const std::string& GetPlayerIdx();
+	const std::string& GetLogin();
+	const std::string& GetPassword();
 
 	void MoveTrain(size_t lineIdx, int speed, size_t trainIdx);
 	void EndTurn();

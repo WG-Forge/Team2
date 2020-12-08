@@ -34,9 +34,12 @@ std::string generateRandomPassword()
 	return result;
 }
 
-ServerConnection::ServerConnection(const std::string& playerName) {
+ServerConnection::ServerConnection(const std::string& playerName, bool isStrong) {
+	this->isStrong = isStrong;
 	EstablishConnection();
-	SendMessage(Request::LOGIN, "{\"name\":\"" + playerName + "\", \"password\":\"" + generateRandomPassword() + "\"}");
+	password = generateRandomPassword();
+	login = playerName;
+	SendMessage(Request::LOGIN, "{\"name\":\"" + login + "\", \"password\":\"" + password + "\"}");
 	
 	std::stringstream responseStream = std::stringstream(GetResponse());
 	Json::Dict responseDocument = Json::Load(responseStream).GetRoot().AsMap();
@@ -45,12 +48,45 @@ ServerConnection::ServerConnection(const std::string& playerName) {
 	homeIdx = home["idx"].AsInt();
 }
 
+ServerConnection::ServerConnection(const std::string& playerName, const std::string& playerPassword, bool isStrong) {
+	this->isStrong = isStrong;
+	EstablishConnection();
+	password = playerPassword;
+	login = playerName;
+	SendMessage(Request::LOGIN, "{\"name\":\"" + login + "\", \"password\":\"" + password + "\"}");
+
+	std::stringstream responseStream = std::stringstream(GetResponse());
+	Json::Dict responseDocument = Json::Load(responseStream).GetRoot().AsMap();
+	playerIdx = responseDocument["idx"].AsString();
+	auto home = responseDocument["home"].AsMap();
+	homeIdx = home["idx"].AsInt();
+}
+
+ServerConnection::ServerConnection(ServerConnection&& other) noexcept {
+	socket = other.socket;
+	playerIdx = std::move(other.playerIdx);
+	login = std::move(other.login);
+	password = std::move(other.password);
+	homeIdx = other.homeIdx;
+	isStrong = other.isStrong;
+	isOriginal = other.isOriginal;
+	other.isOriginal = false;
+}
+
 int ServerConnection::GetHomeIdx() {
 	return homeIdx;
 }
 
-std::string ServerConnection::GetPlayerIdx() {
+const std::string& ServerConnection::GetPlayerIdx() {
 	return playerIdx;
+}
+
+const std::string& ServerConnection::GetLogin() {
+	return login;
+}
+
+const std::string& ServerConnection::GetPassword() {
+	return password;
 }
 
 std::string ServerConnection::GetGameState()
@@ -110,7 +146,12 @@ void ServerConnection::Upgrade(std::vector<size_t> postIdxes, std::vector<size_t
 }
 
 ServerConnection::~ServerConnection() {
-	SendMessage(Request::LOGOUT, "");
+	if (!isOriginal) {
+		return;
+	}
+	if (isStrong) {
+		SendMessage(Request::LOGOUT, "");
+	}
 	SDLNet_TCP_Close(socket);
 }
 
