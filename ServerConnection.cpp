@@ -3,7 +3,14 @@
 #include <sstream>
 #include <random>
 
+
 #ifdef _DEBUG
+#ifdef NETWORK_DEBUG
+#define _NETWORK_DEBUG
+#endif
+#endif
+
+#ifdef _NETWORK_DEBUG
 #include <iostream>
 #include <iomanip>
 #endif
@@ -129,13 +136,13 @@ void ServerConnection::SendMessage(Request actionCode, const std::string& data) 
 	Uint32 code = (Uint32)actionCode;
 	size_t index = 0;
 	unsigned char* frame_header = (unsigned char*)inBuf;
-#ifdef _DEBUG
+#ifdef _NETWORK_DEBUG
 	std::cout << std::endl;
 	std::cout << "------send-------" << std::endl;
 	std::cout << "code: ";
 #endif
 	for (int i = 0; i < 4; ++i, ++index) {
-#ifdef _DEBUG
+#ifdef _NETWORK_DEBUG
 		std::cout << std::hex << std::setw(2) << (unsigned int)(frame_header[index] = (unsigned char)(code & 0xFF)) << ' ';
 #else
 		frame_header[index] = (unsigned char)(code & 0xFF);
@@ -143,19 +150,19 @@ void ServerConnection::SendMessage(Request actionCode, const std::string& data) 
 		code >>= 8;
 	}
 	Uint32 size = data.size();
-#ifdef _DEBUG
+#ifdef _NETWORK_DEBUG
 	std::cout << std::endl;
 	std::cout << "size: ";
 #endif
 	for (int i = 0; i < 4; ++i, ++index) {
-#ifdef _DEBUG
+#ifdef _NETWORK_DEBUG
 		std::cout << std::hex << std::setw(2) << (unsigned int)(frame_header[index] = (unsigned char)(size & 0xFF)) << ' ';
 #else
 		frame_header[index] = (unsigned char)(size & 0xFF);
 #endif
 		size >>= 8;
 	}
-#ifdef _DEBUG
+#ifdef _NETWORK_DEBUG
 	std::cout << std::endl;
 	std::cout << "data: " << data;
 	std::cout << std::endl;
@@ -187,7 +194,7 @@ std::string ServerConnection::GetResponse() {
 	for (int i = 0; i < 4; ++i) {
 		responseCode |= data[i] << i * 8;
 	}
-#ifdef _DEBUG
+#ifdef _NETWORK_DEBUG
 	std::cout << "-----recieve-----" << std::endl;
 	std::cout << "code: ";
 	for (int i = 0; i < 4; ++i) {
@@ -222,7 +229,7 @@ std::string ServerConnection::GetResponse() {
 	for (int i = 7; i >= 4; --i) {
 		size = (size << 8) | data[i];
 	}
-#ifdef _DEBUG
+#ifdef _NETWORK_DEBUG
 	std::cout << "size: ";
 	for (int i = 4; i < 8; ++i) {
 		std::cout << std::hex << std::setw(2) << (unsigned int)data[i] << ' ';
@@ -243,7 +250,7 @@ std::string ServerConnection::GetResponse() {
 	outBuf[size] = '\0';
 	while (size > 0) {
 		int got = SDLNet_TCP_Recv(socket, writeBuf, size);
-#ifdef _DEBUG
+#ifdef _NETWORK_DEBUG
 		std::cout << "got = " << got << std::endl;
 #endif
 		size -= got;
@@ -251,7 +258,7 @@ std::string ServerConnection::GetResponse() {
 	}
 
 	if (buf != Result::OKEY) {
-#ifdef _DEBUG
+#ifdef _NETWORK_DEBUG
 		std::cout << outBuf << std::endl;
 #endif
 		std::string err = outBuf;

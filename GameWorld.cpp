@@ -1,8 +1,15 @@
 #include "GameWorld.h"
-#include <sstream>
 #include "json.h"
+#include <sstream>
 #include <unordered_set>
 
+#define PATHFINDING_DEBUG
+
+#ifdef _DEBUG
+#ifdef PATHFINDING_DEBUG
+#define _PATHFINDING_DEBUG
+#endif
+#endif
 
 GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManager) : connection{ playerName },	textureManager{textureManager},
 		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
@@ -83,10 +90,14 @@ void GameWorld::MoveTrain(Train& train) {
 void GameWorld::MoveTrainTo(Train& train, int to) {
 	auto [first, second] = map.GetEdgeVertices(train.trueLineIdx);
 	if (train.truePosition == 0.0) {
+#ifdef _PATHFINDING_DEBUG
 		std::cout << "from: " << first;
 		std::cout << "; to: " << to;
+#endif
 		to = *map.GetNextOnPath(first, to, map.GetStorages());
+#ifdef _PATHFINDING_DEBUG
 		std::cout << "; via: " << to << std::endl;
+#endif
 		if (to == first) {
 			connection.MoveTrain(train.trueLineIdx, 0, train.idx);
 		}
@@ -100,10 +111,14 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 		}
 	}
 	else if (train.truePosition == map.GetEdgeLength(train.trueLineIdx)) {
+#ifdef _PATHFINDING_DEBUG
 		std::cout << "from: " << second;
 		std::cout << "; to: " << to;
-		to = *map.GetNextOnPath(first, to, map.GetStorages());
+#endif
+		to = *map.GetNextOnPath(second, to, map.GetStorages());
+#ifdef _PATHFINDING_DEBUG
 		std::cout << "; via: " << to << std::endl;
+#endif
 		if (to == second) {
 			connection.MoveTrain(train.trueLineIdx, 0, train.idx);
 		}
@@ -128,11 +143,18 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 
 void GameWorld::MakeMove() {
 	takenPosts.clear();
+#ifdef _PATHFINDING_DEBUG
+	std::cout << "taken posts: ";
+#endif
 	for (const auto& [idx, target] : trainsTargets) {
+#ifdef _PATHFINDING_DEBUG
+		std::cout << target << "; ";
+#endif
 		takenPosts.insert(target);
 	}
-	takenPosts.insert(4);
-	takenPosts.insert(16);
+#ifdef _PATHFINDING_DEBUG
+	std::cout << std::endl;
+#endif
 	MoveTrains();
 	connection.EndTurn();
 }

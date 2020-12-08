@@ -4,9 +4,6 @@
 #include <fstream>
 #include <sstream>
 #include <queue>
-#ifdef _DEBUG
-#include <iostream>
-#endif
 
 constexpr double PI = 3.141592653589793238463;
 constexpr double X_MIDDLE = 400;
@@ -30,9 +27,6 @@ Graph::Graph(const std::string& jsonStructureData, const std::string& jsonCoordi
 		ParseCoordinates(ss);
 	}
 	spTrees.resize(adjacencyList.size());
-#ifdef _DEBUG
-	std::cout << "vertex count: " << adjacencyList.size() << std::endl;
-#endif
 }
 
 int Graph::TranslateVertexIdx(size_t idx) const {

@@ -24,11 +24,15 @@ int main(int argC, char** argV) {
 		std::thread updateThread{ [&world, &toExit]() {
 			try {
 				while (!toExit) {
+#ifndef _DEBUG
 					auto before = std::chrono::high_resolution_clock::now();
-					world.Update();
+#endif
 					world.MakeMove();
+					world.Update();
+#ifndef _DEBUG
 					auto after = std::chrono::high_resolution_clock::now();
 					std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << "ms" << std::endl;
+#endif
 				}
 			}
 			catch (const std::runtime_error& error) {
