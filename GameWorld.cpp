@@ -3,7 +3,6 @@
 #include "json.h"
 #include <unordered_set>
 
-std::unordered_set<int> taken;
 
 GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManager) : connection{ playerName },	textureManager{textureManager},
 		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
@@ -22,7 +21,6 @@ void GameWorld::Draw(SdlWindow& window) {
 }
 
 void GameWorld::MoveTrains() {
-	taken.clear();
 	for (auto& i : trains) {
 		if (i.cooldown != 0) {
 			continue;
@@ -65,15 +63,18 @@ void GameWorld::MoveTrain(Train& train) {
 	}
 
 	if (train.load == 0) {
-		if (allTrainsUpgraded) {
-			to = map.GetBestMarket(from, map.TranslateVertexIdx(connection.GetHomeIdx()), train.capacity - train.load, 0, taken);
+		if (trainsTargets.find(train.idx) != trainsTargets.end()) {
+			takenPosts.erase(trainsTargets[train.idx]);
 		}
-		else {
-			to = map.GetBestStorage(from, map.TranslateVertexIdx(connection.GetHomeIdx()), train.capacity - train.load, 0, taken);
-		}
-		taken.insert(to);
+		to = map.GetBestMarket(from, map.TranslateVertexIdx(connection.GetHomeIdx()), train.capacity - train.load, 0, takenPosts);
+		takenPosts.insert(to);
+		trainsTargets[train.idx] = to;
 	}
 	else {
+		if (trainsTargets.find(train.idx) != trainsTargets.end()) {
+			takenPosts.erase(trainsTargets[train.idx]);
+			trainsTargets.erase(train.idx);
+		}
 		to = map.TranslateVertexIdx(connection.GetHomeIdx());
 	}
 	MoveTrainTo(train, to);
@@ -84,7 +85,7 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 	if (train.truePosition == 0.0) {
 		std::cout << "from: " << first;
 		std::cout << "; to: " << to;
-		to = map.GetNextOnPath(first, to);
+		to = *map.GetNextOnPath(first, to, map.GetStorages());
 		std::cout << "; via: " << to << std::endl;
 		if (to == first) {
 			connection.MoveTrain(train.trueLineIdx, 0, train.idx);
@@ -101,7 +102,7 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 	else if (train.truePosition == map.GetEdgeLength(train.trueLineIdx)) {
 		std::cout << "from: " << second;
 		std::cout << "; to: " << to;
-		to = map.GetNextOnPath(second, to);
+		to = *map.GetNextOnPath(first, to, map.GetStorages());
 		std::cout << "; via: " << to << std::endl;
 		if (to == second) {
 			connection.MoveTrain(train.trueLineIdx, 0, train.idx);
@@ -126,25 +127,13 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 }
 
 void GameWorld::MakeMove() {
-	std::vector<size_t> trainsToUpgrade;
-	int armor = map.GetArmor(map.TranslateVertexIdx(connection.GetHomeIdx()));
-	for (const auto& i : trains) {
-		if (i.owner != connection.GetPlayerIdx()) {
-			continue;
-		}
-		if (i.level >= 3) {
-			continue;
-		}
-		if (i.nextLevelPrice <= armor) {
-			armor -= i.nextLevelPrice;
-			trainsToUpgrade.push_back(i.idx);
-		}
+	takenPosts.clear();
+	for (const auto& [idx, target] : trainsTargets) {
+		takenPosts.insert(target);
 	}
-	
+	takenPosts.insert(4);
+	takenPosts.insert(16);
 	MoveTrains();
-	if (!trainsToUpgrade.empty()) {
-		connection.Upgrade({}, trainsToUpgrade);
-	}
 	connection.EndTurn();
 }
 
@@ -155,6 +144,7 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 	auto nodeMap = doc.GetRoot().AsMap();
 	trainIdxConverter.clear();
 	trains.clear();
+	edgesBlackList.clear();
 	trains.reserve(nodeMap["trains"].AsArray().size());
 	allTrainsUpgraded = true;
 	for (const auto& node : nodeMap["trains"].AsArray()) {
@@ -162,16 +152,35 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 		trainIdxConverter[trainMap["idx"].AsInt()] = trains.size();
 		trains.emplace_back( static_cast<size_t>(trainMap["idx"].AsInt()), static_cast<size_t>(trainMap["line_idx"].AsInt()), 
 			trainMap["position"].AsDouble(), trainMap["speed"].AsDouble());
-		trains[trains.size() - 1].capacity = trainMap["goods_capacity"].AsDouble();
-		trains[trains.size() - 1].load = trainMap["goods"].AsDouble();
-		trains[trains.size() - 1].owner = trainMap["player_idx"].AsString();
-		trains[trains.size() - 1].cooldown = trainMap["cooldown"].AsInt();
-		trains[trains.size() - 1].level = trainMap["level"].AsInt();
-		if (trains[trains.size() - 1].owner == connection.GetPlayerIdx()) {
-			if (trains[trains.size() - 1].level < 3) {
-				trains[trains.size() - 1].nextLevelPrice = trainMap["next_level_price"].AsInt();
+		Train& train = *trains.rbegin();
+		train.capacity = trainMap["goods_capacity"].AsDouble();
+		train.load = trainMap["goods"].AsDouble();
+		train.owner = trainMap["player_idx"].AsString();
+		train.cooldown = trainMap["cooldown"].AsInt();
+		train.level = trainMap["level"].AsInt();
+		if (train.owner == connection.GetPlayerIdx()) {
+			if (train.level < 3) {
+				train.nextLevelPrice = trainMap["next_level_price"].AsInt();
 				allTrainsUpgraded = false;
 			}
+		}
+		else {
+
+		}
+
+		if (train.speed == 1.0) {
+			edgesBlackList.insert(map.GetEdgeVertices(train.lineIdx));
+		}
+		else if (train.speed == -1.0) {
+			std::pair<int, int> edge = map.GetEdgeVertices(train.lineIdx);
+			std::swap(edge.first, edge.second);
+			edgesBlackList.insert(edge);
+		}
+		else {
+			std::pair<int, int> edge = map.GetEdgeVertices(train.lineIdx);
+			edgesBlackList.insert(edge);
+			std::swap(edge.first, edge.second);
+			edgesBlackList.insert(edge);
 		}
 	}
 }
