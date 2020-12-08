@@ -92,6 +92,14 @@ std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_s
 	return GetNextOnPath(ans, from, to);
 }
 
+std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<std::pair<int, int>>& edgesBlackList) {
+	return GetDistance(from, to, verticesBlackList);
+}
+
+std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<std::pair<int, int>>& edgesBlackList) {
+	return GetNextOnPath(from, to, verticesBlackList);
+}
+
 std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) {
 	return edgesData[originalEdgeIdx];
 }

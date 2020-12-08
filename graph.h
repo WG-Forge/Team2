@@ -8,6 +8,16 @@
 #include <unordered_set>
 #include "SDL_window.h"
 
+namespace std {
+    template <> 
+    struct hash<std::pair<int, int>> {
+        inline size_t operator()(const std::pair<int, int>& v) const {
+            std::hash<int> int_hasher;
+            return int_hasher(v.first) ^ int_hasher(v.second);
+        }
+    };
+}
+
 class Graph { // class for working with graphs
 protected:
     struct Vertex {
@@ -48,6 +58,8 @@ public:
     int GetNextOnPath(int from, int to);
     std::optional<double> GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
     std::optional<int> GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
+    std::optional<double> GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<std::pair<int, int>>& edgesBlackList); // no caching
+    std::optional<int> GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<std::pair<int, int>>& edgesBlackList); // no caching
     std::pair<int, int> GetEdgeVertices(int originalEdgeIdx); // returns local from-to idx pair
     double GetEdgeLength(int originalEdgeIdx); // returns length of edge
     std::pair<double, double> GetPointCoord(int localPointIdx); // returns x-y pair
