@@ -104,7 +104,6 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 			connection.MoveTrain(train.trueLineIdx, 1, train.idx);
 		}
 		else {
-			connection.MoveTrain(map.GetEdgeIdx(first, to), -1, train.idx);
 			train.trueLineIdx = map.GetEdgeIdx(first, to);
 			MoveTrain(train);
 		}
@@ -125,7 +124,6 @@ void GameWorld::MoveTrainTo(Train& train, int to) {
 			connection.MoveTrain(train.trueLineIdx, -1, train.idx);
 		}
 		else {
-			connection.MoveTrain(map.GetEdgeIdx(second, to), 1, train.idx);
 			train.trueLineIdx = map.GetEdgeIdx(second, to);
 			MoveTrain(train);
 		}
