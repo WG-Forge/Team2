@@ -3,7 +3,6 @@
 #include <sstream>
 #include <random>
 
-
 #ifdef _DEBUG
 #ifdef NETWORK_DEBUG
 #define _NETWORK_DEBUG
@@ -17,11 +16,6 @@
 
 constexpr char SERVER_ADDRESS[] = "wgforge-srv.wargaming.net";
 constexpr Uint16 SERVER_PORT = 443;
-
-char* inBuf = nullptr;
-size_t inBufSize = 0;
-char* outBuf = nullptr;
-size_t outBufSize = 0;
 
 std::string generateRandomPassword()
 {
@@ -167,13 +161,10 @@ void ServerConnection::EstablishConnection() {
 }
 
 void ServerConnection::SendMessage(Request actionCode, const std::string& data) {
-	if (inBufSize < 8 + data.size()) {
-		if (inBuf) {
-			delete[] inBuf;
-		}
-		inBuf = new char[8 + data.size()];
-		inBufSize = 8 + data.size();
-	}
+	char* inBuf = nullptr;
+	int inBufSize = 0;
+	inBuf = new char[8 + data.size()];
+	inBufSize = 8 + data.size();
 	Uint32 code = (Uint32)actionCode;
 	size_t index = 0;
 	unsigned char* frame_header = (unsigned char*)inBuf;
@@ -212,8 +203,10 @@ void ServerConnection::SendMessage(Request actionCode, const std::string& data) 
 		inBuf[index] = data[i];
 	}
 	if (SDLNet_TCP_Send(socket, inBuf, 8 + data.size()) < 8 + data.size()) {
+		delete[] inBuf;
 		throw std::runtime_error{ SDLNet_GetError() };
 	}
+	delete[] inBuf;
 }
 
 std::string ServerConnection::GetResponse() {
@@ -279,14 +272,8 @@ std::string ServerConnection::GetResponse() {
 	std::cout << std::dec;
 	std::cout << "size = " << size << std::endl;
 #endif
-
-	if (outBufSize < size + 1ull) {
-		if (outBuf) {
-			delete[] outBuf;
-		}
-		outBuf = new char[size + 1ull];
-		outBufSize = size + 1ull;
-	}
+	int outBufSize = size + 1ull;
+	char* outBuf = new char[size + 1ull];
 	char* writeBuf = outBuf;
 	outBuf[size] = '\0';
 	while (size > 0) {
@@ -298,13 +285,15 @@ std::string ServerConnection::GetResponse() {
 		writeBuf += got;
 	}
 
+	std::string result = outBuf;
+	delete[] outBuf;
+
 	if (buf != Result::OKEY) {
 #ifdef _NETWORK_DEBUG
 		std::cout << outBuf << std::endl;
 #endif
-		std::string err = outBuf;
-		throw std::runtime_error{ err };
+		throw std::runtime_error{ result };
 	}
 
-	return outBuf;
+	return result;
 }
