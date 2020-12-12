@@ -86,7 +86,7 @@ std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_s
 	return GetNextOnPath(ans, from, to);
 }
 
-std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<std::pair<int, int>>& edgesBlackList) {
+std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList) {
 	if (from == to) {
 		return to;
 	}
@@ -97,7 +97,7 @@ std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_
 	return ans[to].length;
 }
 
-std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<std::pair<int, int>>& edgesBlackList) {
+std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList) {
 	if (from == to) {
 		return to;
 	}
@@ -134,7 +134,7 @@ void Graph::AddEdge(size_t from, Vertex::Edge edge) {
 	}
 }
 
-std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<std::pair<int, int>>& edgesBlackList) {
+std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList) {
 	std::vector <spData> ans(adjacencyList.size(), { -1, -1 });
 	struct dijkstraData {
 		int idx;

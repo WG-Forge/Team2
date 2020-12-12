@@ -49,6 +49,7 @@ protected:
     double width;
     double height;
 public:
+    using edge = std::pair<int, int>;
     explicit Graph(const std::string& filename); // creates graph with points in circular layout from file with json data
     Graph(const std::string& jsonStructureData, const std::string& jsonCoordinatesData);
     int TranslateVertexIdx(size_t idx) const;
@@ -58,8 +59,8 @@ public:
     int GetNextOnPath(int from, int to);
     std::optional<double> GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
     std::optional<int> GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
-    std::optional<double> GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<std::pair<int, int>>& edgesBlackList); // no caching
-    std::optional<int> GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<std::pair<int, int>>& edgesBlackList); // no caching
+    std::optional<double> GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList); // no caching
+    std::optional<int> GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList); // no caching
     std::pair<int, int> GetEdgeVertices(int originalEdgeIdx); // returns local from-to idx pair
     double GetEdgeLength(int originalEdgeIdx); // returns length of edge
     std::pair<double, double> GetPointCoord(int localPointIdx); // returns x-y pair
@@ -71,6 +72,6 @@ private:
     void ParseCoordinates(std::istream& input);
     void AddEdge(size_t from, Vertex::Edge edge);
     int GetNextOnPath(const std::vector<spData>& spTree, int from, int to);
-    std::vector <spData> GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList = {}, const std::unordered_set<std::pair<int, int>>& edgesBlackList = {});
+    std::vector<spData> GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList = {}, const std::unordered_set<edge>& edgesBlackList = {});
 };
 
