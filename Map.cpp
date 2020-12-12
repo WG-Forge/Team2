@@ -16,6 +16,9 @@ Map::Map(const std::string& jsonStructureData, const std::string& jsonCoordinate
 		else if (posts[i].type == Post::PostTypes::STORAGE) {
 			storages.insert(i);
 		}
+		else if (posts[i].type == Post::PostTypes::TOWN) {
+			towns.insert(i);
+		}
 	}
 }
 
@@ -67,7 +70,6 @@ int Map::GetBestMarket(int from, int homeIdx, double maxLoad, double distanceExt
 }
 
 int Map::GetBestStorage(int from, int homeIdx, double maxLoad, double distanceExtra, const std::unordered_set<int>& blackList) {
-	double maxTime = posts[homeIdx].goodsLoad / posts[homeIdx].populationLoad;
 	int bestIdx = -1;
 	double bestK = 0;
 	for (int i = 0; i < posts.size(); ++i) {
@@ -86,11 +88,69 @@ int Map::GetBestStorage(int from, int homeIdx, double maxLoad, double distanceEx
 	return bestIdx;
 }
 
+std::pair<int, double> Map::GetBestMarket(int from, int home, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList) {
+	double maxTime = posts[home].goodsLoad / posts[home].populationLoad;
+	int bestIdx = -1;
+	double bestK = 0;
+	for (int i = 0; i < posts.size(); ++i) {
+		if (posts[i].type != Post::PostTypes::MARKET) {
+			continue;
+		}
+		if (vBlackList.count(i) != 0) {
+			continue;
+		}
+		if (GetDistance(from, i) + GetDistance(i, home) > maxTime) {
+			continue;
+		}
+		double k = GetMarketK(from, i, home, maxLoad, vBlackList, eBlackList);
+		if (k > bestK || bestIdx == -1) {
+			bestIdx = i;
+			bestK = k;
+		}
+	}
+	if (bestIdx != -1) {
+		return { bestIdx, bestK };
+	}
+	for (int i = 0; i < posts.size(); ++i) {
+		if (posts[i].type != Post::PostTypes::MARKET) {
+			continue;
+		}
+		if (vBlackList.count(i) != 0) {
+			continue;
+		}
+		double k = GetMarketK(from, i, home, maxLoad, vBlackList, eBlackList);
+		if (k > bestK || bestIdx == -1) {
+			bestIdx = i;
+			bestK = k;
+		}
+	}
+	return { bestIdx, bestK };
+}
+
+std::pair<int, double> Map::GetBestStorage(int from, int home, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList) {
+	int bestIdx = -1;
+	double bestK = 0;
+	for (int i = 0; i < posts.size(); ++i) {
+		if (posts[i].type != Post::PostTypes::STORAGE) {
+			continue;
+		}
+		if (vBlackList.count(i) != 0) {
+			continue;
+		}
+		double k = GetStorageK(from, i, home, maxLoad, vBlackList, eBlackList);
+		if (k > bestK || bestIdx == -1) {
+			bestIdx = i;
+			bestK = k;
+		}
+	}
+	return { bestIdx, bestK };
+}
+
 int Map::GetArmor(int idx) {
 	return posts[idx].armorLoad;
 }
 
-std::unordered_set<int> Map::GetMarkets() {
+const std::unordered_set<int>& Map::GetMarkets() {
 	return markets;
 }
 
@@ -111,8 +171,34 @@ double Map::GetStorageK(int from, int idx, int homeIdx, double maxLoad, double d
 	return gain / (distanceFrom + distanceTo);
 }
 
-std::unordered_set<int> Map::GetStorages() {
+double Map::GetMarketK(int from, int idx, int homeIdx, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList) {
+	std::unordered_set<int> forbidden = storages;
+	forbidden.insert(vBlackList.begin(), vBlackList.end());
+	double distanceTo = *GetDistance(from, idx, forbidden, eBlackList);
+	double distanceFrom = GetDistance(idx, homeIdx);
+	double load = std::min(maxLoad, std::min(posts[idx].goodsCapacity, posts[idx].goodsLoad + posts[idx].refillRate * distanceTo));
+	double gain = load - posts[homeIdx].populationLoad * (distanceTo + distanceFrom); // gain if city capacity is infinite
+	gain = std::min(gain, posts[homeIdx].goodsCapacity - (posts[homeIdx].goodsLoad - posts[homeIdx].populationLoad * (distanceTo + distanceFrom))); // gain if city capacity is finite
+	return gain / (distanceFrom + distanceTo);
+}
+
+double Map::GetStorageK(int from, int idx, int homeIdx, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList) {
+	std::unordered_set<int> forbidden = markets;
+	forbidden.insert(vBlackList.begin(), vBlackList.end());
+	double distanceTo = *GetDistance(from, idx, forbidden, eBlackList);
+	double distanceFrom = GetDistance(idx, homeIdx);
+	double load = std::min(maxLoad, std::min(posts[idx].goodsCapacity, posts[idx].goodsLoad + posts[idx].refillRate * distanceTo));
+	double gain = std::min(load, posts[homeIdx].armorCapacity - posts[homeIdx].armorLoad);
+	return gain / (distanceFrom + distanceTo);
+}
+
+const std::unordered_set<int>& Map::GetStorages() {
 	return storages;
+}
+
+const std::unordered_set<int>& Map::GetTowns()
+{
+	return towns;
 }
 
 void Map::Draw(SdlWindow& window) {
