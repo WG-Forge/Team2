@@ -32,7 +32,10 @@ private:
 	std::vector<Train> trains;
 	std::map<size_t, size_t> trainIdxConverter;
 	std::unordered_set<std::pair<int, int>> edgesBlackList;
+	std::unordered_set<int> pointBlackList;
 	std::unordered_set<int> takenPosts;
+	std::unordered_set<uint64_t> takenPositions;
+	std::unordered_set<uint64_t> whitePositions;
 	std::unordered_map<int, int> trainsTargets;
 public:
 	GameWorld(const std::string& playerName, TextureManager& textureManager);
@@ -40,10 +43,15 @@ public:
 	void Draw(SdlWindow& window);
 	void MakeMove();
 private:
+	void Update(const std::string& jsonData);
 	void MoveTrains();
-	TrainMoveData MoveTrain(Train& train);
-	TrainMoveData MoveTrainTo(Train& train, int to);
+	std::optional<TrainMoveData> MoveTrain(Train& train);
+	std::optional<TrainMoveData> MoveTrainTo(Train& train, int to);
 	void UpdateTrains(const std::string& jsonData);
 	void DrawTrains(SdlWindow& window);
+	uint64_t GetPosition(int vertex);
+	uint64_t GetPosition(int lineIdx, double position);
+	uint64_t GetNextPosition(int lineIdx, double position, int speed);
+	uint64_t GetNextPosition(int prevLineIdx, int lineIdx, double position, int speed);
 };
 
