@@ -30,6 +30,7 @@ std::string generateRandomPassword()
 
 ServerConnection::ServerConnection(const std::string& playerName, bool isStrong) {
 	this->isStrong = isStrong;
+	isOriginal = isStrong;
 	EstablishConnection();
 	password = generateRandomPassword();
 	login = playerName;
@@ -44,6 +45,7 @@ ServerConnection::ServerConnection(const std::string& playerName, bool isStrong)
 
 ServerConnection::ServerConnection(const std::string& playerName, const std::string& playerPassword, bool isStrong) {
 	this->isStrong = isStrong;
+	isOriginal = isStrong;
 	EstablishConnection();
 	password = playerPassword;
 	login = playerName;
