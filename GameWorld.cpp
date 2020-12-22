@@ -203,8 +203,14 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrainTo(Train& train, int
 
 	int next;
 	std::unordered_set<int> blackList = map.GetMarkets();
-	if (everythingUpgraded) {
+	if (train.load == train.capacity) {
+		blackList.clear();
+	}
+	else if (everythingUpgraded) {
 		blackList = map.GetStorages();
+	}
+	else {
+		blackList = map.GetMarkets();
 	}
 	for (auto [t, i] : trainsTargets) {
 		if (t == train.idx) {
