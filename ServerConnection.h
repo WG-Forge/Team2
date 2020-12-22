@@ -23,6 +23,7 @@ protected:
 	int homeIdx;
 	bool isStrong;
 	bool isOriginal;
+	bool isEstablished = true;
 public:
 	enum class Result {
 		OKEY = 0,
@@ -35,13 +36,15 @@ public:
 	};
 
 	ServerConnection(const std::string& playerName, bool isStrong = true); // performs login operation
-	ServerConnection(const std::string& playerName, const std::string& playerPassword, bool isStrong = false);
+	ServerConnection(const std::string& playerName, const std::string& playerPassword, bool isStrong = false, bool toEstablish = true);
 	ServerConnection(const ServerConnection& other) = delete;
 	ServerConnection(ServerConnection&& other) noexcept;
 	std::string GetMapStaticObjects();
 	std::string GetMapDynamicObjects();
 	std::string GetMapCoordinates();
 	std::string GetGameState();
+	bool IsEstablished();
+	void Establish();
 
 	int GetHomeIdx();
 	const std::string& GetPlayerIdx();
