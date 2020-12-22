@@ -19,6 +19,7 @@ struct Post {
 	double armorLoad = 0.0;
 	double populationCapacity = 0.0;
 	double populationLoad = 0.0;
+	int level = 1;
 	PostTypes type;
 	size_t idx;
 	std::string name;

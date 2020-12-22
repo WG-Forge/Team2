@@ -203,6 +203,7 @@ const std::unordered_set<int>& Map::GetTowns()
 
 void Map::Draw(SdlWindow& window) {
 	DrawEdges(window);
+	int k = 0;
 	for (int i = 0; i < posts.size(); ++i) {
 		SDL_Texture* texture = nullptr;
 		int textureSide = TEXTURE_SIDE;
@@ -212,7 +213,21 @@ void Map::Draw(SdlWindow& window) {
 			texture = textureManager["assets//none.png"];
 			break;
 		case Post::PostTypes::TOWN:
-			texture = textureManager["assets//town.png"];
+
+			switch (posts[i].level)
+			{
+			case 1:
+				texture = textureManager["assets//town1.png"];
+				break;
+			case 2:
+				texture = textureManager["assets//town2.png"];
+				break;
+			case 3:
+				texture = textureManager["assets//town3.png"];
+				break;
+			default:
+				texture = textureManager["assets//town1.png"];
+			}
 			textureSide *= 2;
 			offsetY -= TEXTURE_SIDE * 0.66;
 			break;
@@ -276,6 +291,7 @@ void Map::Update(const std::string& jsonDynamicData) {
 				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].armorLoad = postMap["armor"].AsDouble();
 				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].populationCapacity = postMap["population_capacity"].AsDouble();
 				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].populationLoad = postMap["population"].AsDouble();
+				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].level = postMap["level"].AsInt();
 			}
 			else if(posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].type == Post::PostTypes::MARKET) {
 				posts[TranslateVertexIdx(postMap["point_idx"].AsInt())].goodsCapacity = postMap["product_capacity"].AsDouble();
