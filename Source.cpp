@@ -45,7 +45,7 @@ int main(int argC, char** argV) {
 		} };
 
 		while (!(toExit = window.HasCloseRequest())) {
-			window.SetDrawColor(35, 23, 0);
+			window.SetDrawColor(90, 90, 90);
 			window.Clear();
 			world.Draw(window);
 
