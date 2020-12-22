@@ -225,6 +225,7 @@ void Map::Draw(SdlWindow& window) {
 		int offsetY = 0;
 		switch (posts[i].type) {
 		case Post::PostTypes::NONE:
+			offsetY -= TEXTURE_SIDE * 0.3;
 			texture = textureManager["assets//none.png"];
 			break;
 		case Post::PostTypes::TOWN:
