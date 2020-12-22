@@ -23,6 +23,7 @@ int main(int argC, char** argV) {
 
 		std::thread updateThread{ [&world, &toExit]() {
 			try {
+				int turn = 0;
 				while (!toExit) {
 #ifndef _DEBUG
 					auto before = std::chrono::high_resolution_clock::now();
@@ -31,7 +32,7 @@ int main(int argC, char** argV) {
 					world.Update();
 #ifndef _DEBUG
 					auto after = std::chrono::high_resolution_clock::now();
-					std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << "ms" << std::endl;
+					std::cout << "turn " << ++turn << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << "ms" << std::endl;
 #endif
 				}
 			}
