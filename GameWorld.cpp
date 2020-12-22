@@ -17,7 +17,9 @@ void makeMoveRequest(int lineIdx, int speed, int trainIdx, ServerConnection& con
 	}
 	catch (std::runtime_error& error) {
 		std::cout << error.what() << std::endl;
+#ifdef _PATHFINDING_DEBUG
 		throw;
+#endif
 	}
 }
 
@@ -41,6 +43,35 @@ void GameWorld::MakeMove() {
 		takenPosts.insert(target);
 	}
 	MoveTrains();
+	int armor = map.GetArmor(map.TranslateVertexIdx(connection.GetHomeIdx()));
+	auto town = GetPosition(map.TranslateVertexIdx(connection.GetHomeIdx()));
+	std::vector<size_t> trainsToUpgrade;
+	for (const auto& i : trains) {
+		if (town != GetPosition(i.lineIdx, i.position)) {
+			continue;
+		}
+		if (i.level >= 3) {
+			continue;
+		}
+		if (i.nextLevelPrice <= armor) {
+
+			armor -= i.nextLevelPrice;
+			trainsToUpgrade.push_back(i.idx);
+		}
+	}
+	std::vector<size_t> townsToUpgrade;
+
+	if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) < 3) {
+		int price = map.GetNextLevelPrice(map.TranslateVertexIdx(connection.GetHomeIdx()));
+		if (price <= armor) {
+			townsToUpgrade.push_back(map.GetPostIdx(map.TranslateVertexIdx(connection.GetHomeIdx())));
+		}
+	}
+
+	if (!trainsToUpgrade.empty() || !townsToUpgrade.empty()) {
+		connection.Upgrade(townsToUpgrade, trainsToUpgrade);
+	}
+
 	connection.EndTurn();
 }
 
@@ -345,6 +376,7 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 }
 
 void GameWorld::DrawTrains(SdlWindow& window) {
+	int k = 0;
 	for (const auto& i : trains) {
 		double from, to;
 		std::pair<int, int> vertices = map.GetEdgeVertices(i.lineIdx);
@@ -370,11 +402,18 @@ void GameWorld::DrawTrains(SdlWindow& window) {
 		double x = a.first + (b.first - a.first) * (i.position / edgeLength);
 		double y = a.second + (b.second - a.second) * (i.position / edgeLength);
 		SDL_Texture* texture;
-		if (i.speed != 0) {
-			texture = textureManager["assets\\train.png"];
-		}
-		else {
-			texture = textureManager["assets\\train_no_smoke.png"];
+		switch (i.level) {
+		case 1:
+			texture = textureManager["assets\\train1.png"];
+			break;
+		case 2:
+			texture = textureManager["assets\\train2.png"];
+			break;
+		case 3:
+			texture = textureManager["assets\\train3.png"];
+			break;
+		default:
+			texture = textureManager["assets\\train1.png"];
 		}
 		window.DrawTexture(x, y, 40, 40, texture, 0.0, toMirror);
 	}
