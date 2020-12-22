@@ -25,7 +25,7 @@ private:
 	};
 
 	std::vector<ServerConnection> helpConnections;
-	bool allTrainsUpgraded = false;
+	bool everythingUpgraded = false;
 	ServerConnection connection;
 	TextureManager& textureManager;
 	Map map;

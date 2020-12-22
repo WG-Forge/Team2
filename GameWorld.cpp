@@ -13,6 +13,9 @@
 
 void makeMoveRequest(int lineIdx, int speed, int trainIdx, ServerConnection& connection) {
 	try {
+		if (!connection.IsEstablished()) {
+			connection.Establish();
+		}
 		connection.MoveTrain(lineIdx, speed, trainIdx);
 	}
 	catch (std::runtime_error& error) {
@@ -42,15 +45,16 @@ void GameWorld::MakeMove() {
 	for (const auto& [idx, target] : trainsTargets) {
 		takenPosts.insert(target);
 	}
-	MoveTrains();
 	int armor = map.GetArmor(map.TranslateVertexIdx(connection.GetHomeIdx()));
 	auto town = GetPosition(map.TranslateVertexIdx(connection.GetHomeIdx()));
 	std::vector<size_t> trainsToUpgrade;
+	everythingUpgraded = true;
 	for (const auto& i : trains) {
-		if (town != GetPosition(i.lineIdx, i.position)) {
+		if (i.level >= 3) {
 			continue;
 		}
-		if (i.level >= 3) {
+		everythingUpgraded = false;
+		if (town != GetPosition(i.lineIdx, i.position)) {
 			continue;
 		}
 		if (i.nextLevelPrice <= armor) {
@@ -62,12 +66,14 @@ void GameWorld::MakeMove() {
 	std::vector<size_t> townsToUpgrade;
 
 	if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) < 3) {
+		everythingUpgraded = false;
 		int price = map.GetNextLevelPrice(map.TranslateVertexIdx(connection.GetHomeIdx()));
 		if (price <= armor) {
 			townsToUpgrade.push_back(map.GetPostIdx(map.TranslateVertexIdx(connection.GetHomeIdx())));
 		}
 	}
 
+	MoveTrains();
 	if (!trainsToUpgrade.empty() || !townsToUpgrade.empty()) {
 		connection.Upgrade(townsToUpgrade, trainsToUpgrade);
 	}
@@ -115,7 +121,7 @@ void GameWorld::MoveTrains() {
 		}
 	}
 	while (helpConnections.size() < trainsCount) {
-		helpConnections.emplace_back(connection.GetLogin(), connection.GetPassword());
+		helpConnections.emplace_back(connection.GetLogin(), connection.GetPassword(), false, false);
 	}
 	for (int i = 0; i < trainsCount; ++i) {
 		helpThreads.emplace_back(makeMoveRequest, std::get<0>(moveData[i]), std::get<1>(moveData[i]), std::get<2>(moveData[i]), std::ref(helpConnections[i]));
@@ -159,7 +165,12 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrain(Train& train) {
 		if (trainsTargets.count(train.idx)) {
 			takenPosts.erase(trainsTargets[train.idx]);
 		}
-		target = map.GetBestStorage(source, target, train.capacity, takenPosts, edgesBlackList).first;
+		if (!everythingUpgraded) {
+			target = map.GetBestStorage(source, target, train.capacity, takenPosts, edgesBlackList).first;
+		}
+		else {
+			target = map.GetBestMarket(source, target, train.capacity, takenPosts, edgesBlackList).first;
+		}
 		takenPosts.insert(target);
 		trainsTargets[train.idx] = target;
 	}
@@ -192,6 +203,9 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrainTo(Train& train, int
 
 	int next;
 	std::unordered_set<int> blackList = map.GetMarkets();
+	if (everythingUpgraded) {
+		blackList = map.GetStorages();
+	}
 	for (auto [t, i] : trainsTargets) {
 		if (t == train.idx) {
 			continue;
@@ -325,7 +339,6 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 	pointBlackList.clear();
 	takenPositions.clear();
 	trains.reserve(nodeMap["trains"].AsArray().size());
-	allTrainsUpgraded = true;
 	for (const auto& node : nodeMap["trains"].AsArray()) {
 		auto trainMap = node.AsMap();
 		trainIdxConverter[trainMap["idx"].AsInt()] = trains.size();
@@ -342,7 +355,6 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 		if (train.owner == connection.GetPlayerIdx()) {
 			if (train.level < 3) {
 				train.nextLevelPrice = trainMap["next_level_price"].AsInt();
-				allTrainsUpgraded = false;
 			}
 			takenPositions.insert(GetPosition(train.lineIdx, train.position));
 		}
