@@ -33,7 +33,7 @@ int Graph::TranslateVertexIdx(size_t idx) const {
 	return idxConverter.at(idx);
 }
 
-int Graph::GetEdgeIdx(int from, int to) {
+int Graph::GetEdgeIdx(int from, int to) const {
 	for (const auto& i : adjacencyList[from].edges) {
 		if (i.to == to) {
 			return i.idx;
@@ -42,8 +42,7 @@ int Graph::GetEdgeIdx(int from, int to) {
 	return 0;
 }
 
-double Graph::GetDistance(int from, int to)
-{
+double Graph::GetDistance(int from, int to) const {
 	if (from == to) {
 		return 0.0;
 	}
@@ -53,17 +52,19 @@ double Graph::GetDistance(int from, int to)
 	return spTrees[from][to].length;
 }
 
-double Graph::GetDistance(int from, int to, int dist, int onPathTo)
-{
-	double distance = GetDistance(from, to);
-	if (GetNextOnPath(from, to) == onPathTo) {
-		distance -= dist;
-	} else {
-		distance += dist;
+double Graph::GetDistance(int from, int to, int dist, int onPathTo) const {
+	double distanceReturn = GetDistance(from, to) + dist;
+	double distanceContinue = GetDistance(onPathTo, to);
+	for (const auto& edge : adjacencyList[from].edges) {
+		if (edge.to == onPathTo) {
+			distanceContinue += edge.length - dist;
+			break;
+		}
 	}
+	return std::min(distanceReturn, distanceContinue);
 }
 
-int Graph::GetNextOnPath(int from, int to) {	
+int Graph::GetNextOnPath(int from, int to) const {	
 	if (from == to) {
 		return to;
 	}
@@ -74,20 +75,15 @@ int Graph::GetNextOnPath(int from, int to) {
 	return GetNextOnPath(spTrees[from], from, to);
 }
 
-int Graph::GetNextOnPath(int from, int to, int dist, int onPathTo)
-{
-	int next = GetNextOnPath(from, to);
-	if (next == onPathTo) {
-		return next;
-	} else {
+int Graph::GetNextOnPath(int from, int to, int dist, int onPathTo) const {
+	if (GetDistance(from, to, dist, onPathTo) == GetDistance(from, to)) {
 		return from;
+	} else {
+		return onPathTo;
 	}
 }
 
-std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList) {
-	if (from == to) {
-		return to;
-	}
+std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList) const {
  	auto ans = GenerateSpTree(from, verticesBlackList);
 	if (ans[to].length == -1) {
 		return std::nullopt;
@@ -95,7 +91,7 @@ std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_
 	return ans[to].length;
 }
 
-std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList) {
+std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList) const {
 	if (from == to) {
 		return to;
 	}
@@ -106,33 +102,54 @@ std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_s
 	return GetNextOnPath(ans, from, to);
 }
 
-std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList) {
-	if (from == to) {
-		return to;
-	}
+std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList, int dist, int onPathTo) const {
 	auto ans = GenerateSpTree(from, verticesBlackList, edgesBlackList);
+	if (dist != 0) {
+		auto buf = GenerateSpTree(onPathTo, verticesBlackList, edgesBlackList);
+		if (ans[to].length != -1) {
+			ans[to].length += dist;
+		}
+		if (buf[to].length != -1) {
+			buf[to].length -= dist;
+		}
+		if ((ans[to].length == -1) || ((buf[to].length != -1) && (buf[to].length < ans[to].length))) {
+			ans = std::move(buf);
+		}
+	}
 	if (ans[to].length == -1) {
 		return std::nullopt;
 	}
 	return ans[to].length;
 }
 
-std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList) {
+std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList, int dist, int onPathTo) const {
 	if (from == to) {
 		return to;
 	}
 	auto ans = GenerateSpTree(from, verticesBlackList, edgesBlackList);
+	if (dist != 0) {
+		auto buf = GenerateSpTree(onPathTo, verticesBlackList, edgesBlackList);
+		if (ans[to].length != -1) {
+			ans[to].length += dist;
+		}
+		if (buf[to].length != -1) {
+			buf[to].length -= dist;
+		}
+		if ((ans[to].length == -1) || ((buf[to].length != -1) && (buf[to].length < ans[to].length))) {
+			ans = std::move(buf);
+		}
+	}
 	if (ans[to].length == -1) {
 		return std::nullopt;
 	}
 	return GetNextOnPath(ans, from, to);
 }
 
-std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) {
-	return edgesData[originalEdgeIdx];
+std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) const {
+	return edgesData.at(originalEdgeIdx);
 }
 
-double Graph::GetEdgeLength(int originalEdgeIdx) {
+double Graph::GetEdgeLength(int originalEdgeIdx) const {
 	for (const auto& j : adjacencyList[GetEdgeVertices(originalEdgeIdx).first].edges) {
 		if (j.idx == originalEdgeIdx) {
 			return j.length;
@@ -141,7 +158,7 @@ double Graph::GetEdgeLength(int originalEdgeIdx) {
 	return 0.0;
 }
 
-std::pair<double, double> Graph::GetPointCoord(int localPointIdx) {
+std::pair<double, double> Graph::GetPointCoord(int localPointIdx) const {
 	return std::pair<double, double>{adjacencyList[localPointIdx].point.x, adjacencyList[localPointIdx].point.y};
 }
 
@@ -154,7 +171,7 @@ void Graph::AddEdge(size_t from, Vertex::Edge edge) {
 	}
 }
 
-std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList) {
+std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList) const {
 	std::vector <spData> ans(adjacencyList.size(), { -1, -1 });
 	struct dijkstraData {
 		int idx;
@@ -184,7 +201,7 @@ std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordere
 	return ans;
 }
 
-int Graph::GetNextOnPath(const std::vector<spData>& spTree, int from, int to) {
+int Graph::GetNextOnPath(const std::vector<spData>& spTree, int from, int to) const {
 	int ans = to;
 	while (spTree[ans].prevVertex != from) {
 		ans = spTree[ans].prevVertex;

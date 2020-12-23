@@ -188,10 +188,10 @@ double Map::GetStorageK(int from, int idx, int homeIdx, double maxLoad, double d
 	return gain / (distanceFrom + distanceTo + wait);
 }
 
-double Map::GetMarketK(int from, int idx, int homeIdx, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList) {
+double Map::GetMarketK(int from, int idx, int homeIdx, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList, int dist, int onPathTo) {
 	std::unordered_set<int> forbidden = storages;
 	forbidden.insert(vBlackList.begin(), vBlackList.end());
-	double distanceTo = *GetDistance(from, idx, forbidden, eBlackList);
+	double distanceTo = *GetDistance(from, idx, forbidden, eBlackList, dist, onPathTo);
 	double distanceFrom = GetDistance(idx, homeIdx);
 	double load = std::min(maxLoad, std::min(posts[idx].goodsCapacity, posts[idx].goodsLoad + posts[idx].refillRate * distanceTo));
 	double gain = load - posts[homeIdx].populationLoad * (distanceTo + distanceFrom); // gain if city capacity is infinite
@@ -200,10 +200,10 @@ double Map::GetMarketK(int from, int idx, int homeIdx, double maxLoad, const std
 	return gain / (distanceFrom + distanceTo + wait);
 }
 
-double Map::GetStorageK(int from, int idx, int homeIdx, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList) {
+double Map::GetStorageK(int from, int idx, int homeIdx, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList, int dist, int onPathTo) {
 	std::unordered_set<int> forbidden = markets;
 	forbidden.insert(vBlackList.begin(), vBlackList.end());
-	double distanceTo = *GetDistance(from, idx, forbidden, eBlackList);
+	double distanceTo = *GetDistance(from, idx, forbidden, eBlackList, dist, onPathTo);
 	double distanceFrom = GetDistance(idx, homeIdx);
 	double load = std::min(maxLoad, std::min(posts[idx].goodsCapacity, posts[idx].goodsLoad + posts[idx].refillRate * distanceTo));
 	double gain = std::min(load, posts[homeIdx].armorCapacity - posts[homeIdx].armorLoad);

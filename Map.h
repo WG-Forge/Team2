@@ -54,8 +54,8 @@ public:
 private:
 	double GetMarketK(int from, int idx, int homeIdx, double maxLoad, double distanceExtra);
 	double GetStorageK(int from, int idx, int homeIdx, double maxLoad, double distanceExtra);
-	double GetMarketK(int from, int idx, int homeIdx, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList);
-	double GetStorageK(int from, int idx, int homeIdx, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList);
+	double GetMarketK(int from, int idx, int homeIdx, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList, int dist = 0, int onPathTo = -1);
+	double GetStorageK(int from, int idx, int homeIdx, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList, int dist = 0, int onPathTo = -1);
 	double GetMarketK(int from, int idx, int homeIdx, double maxLoad, int dist, int onPathTo);
 	double GetStorageK(int from, int idx, int homeIdx, double maxLoad, int dist, int onPathTo);
 };
