@@ -45,7 +45,7 @@ protected:
         int prevVertex;
         double length;
     };
-    std::vector<std::vector<spData>> spTrees;
+    mutable std::vector<std::vector<spData>> spTrees;
     double width;
     double height;
 public:
@@ -54,18 +54,18 @@ public:
     Graph(const std::string& jsonStructureData, const std::string& jsonCoordinatesData);
     int TranslateVertexIdx(size_t idx) const;
     int TranslateEdgeIdx(size_t idx) const;
-    int GetEdgeIdx(int from, int to);
-    double GetDistance(int from, int to);
-    double GetDistance(int from, int to, int dist, int onPathTo);
-    int GetNextOnPath(int from, int to);
-    int GetNextOnPath(int from, int to, int dist, int onPathTo);
-    std::optional<double> GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
-    std::optional<int> GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
-    std::optional<double> GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList); // no caching
-    std::optional<int> GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList); // no caching
-    std::pair<int, int> GetEdgeVertices(int originalEdgeIdx); // returns local from-to idx pair
-    double GetEdgeLength(int originalEdgeIdx); // returns length of edge
-    std::pair<double, double> GetPointCoord(int localPointIdx); // returns x-y pair
+    int GetEdgeIdx(int from, int to) const;
+    double GetDistance(int from, int to) const;
+    double GetDistance(int from, int to, int dist, int onPathTo) const;
+    int GetNextOnPath(int from, int to) const;
+    int GetNextOnPath(int from, int to, int dist, int onPathTo) const;
+    std::optional<double> GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList) const; // no caching
+    std::optional<int> GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList) const; // no caching
+    std::optional<double> GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList, int dist = 0, int onPathTo = -1) const; // no caching
+    std::optional<int> GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList, int dist = 0, int onPathTo = -1) const; // no caching
+    std::pair<int, int> GetEdgeVertices(int originalEdgeIdx) const; // returns local from-to idx pair
+    double GetEdgeLength(int originalEdgeIdx) const; // returns length of edge
+    std::pair<double, double> GetPointCoord(int localPointIdx) const; // returns x-y pair
     virtual void Draw(SdlWindow& window); // draws current graph
     void DrawEdges(SdlWindow& window);
     virtual ~Graph() = default;
@@ -73,7 +73,7 @@ private:
     void ParseStructure(std::istream& input);
     void ParseCoordinates(std::istream& input);
     void AddEdge(size_t from, Vertex::Edge edge);
-    int GetNextOnPath(const std::vector<spData>& spTree, int from, int to);
-    std::vector<spData> GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList = {}, const std::unordered_set<edge>& edgesBlackList = {});
+    int GetNextOnPath(const std::vector<spData>& spTree, int from, int to) const;
+    std::vector<spData> GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList = {}, const std::unordered_set<edge>& edgesBlackList = {}) const;
 };
 
