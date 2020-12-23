@@ -211,6 +211,27 @@ double Map::GetStorageK(int from, int idx, int homeIdx, double maxLoad, const st
 	return gain / (distanceFrom + distanceTo + wait);
 }
 
+double Map::GetStorageK(int from, int idx, int homeIdx, double maxLoad, int dist, int onPathTo)
+{
+	double distanceTo = GetDistance(from, idx, dist, onPathTo);
+	double distanceFrom = GetDistance(idx, homeIdx);
+	double load = std::min(maxLoad, std::min(posts[idx].goodsCapacity, posts[idx].goodsLoad + posts[idx].refillRate * distanceTo));
+	double gain = std::min(load, posts[homeIdx].armorCapacity - posts[homeIdx].armorLoad);
+	double wait = (maxLoad - load) / posts[idx].refillRate;
+	return gain / (distanceFrom + distanceTo + wait);
+}
+
+double Map::GetMarketK(int from, int idx, int homeIdx, double maxLoad, int dist, int onPathTo)
+{
+	double distanceTo = GetDistance(from, idx, dist, onPathTo);
+	double distanceFrom = GetDistance(idx, homeIdx);
+	double load = std::min(maxLoad, std::min(posts[idx].goodsCapacity, posts[idx].goodsLoad + posts[idx].refillRate * distanceTo));
+	double gain = load - posts[homeIdx].populationLoad * (distanceTo + distanceFrom); // gain if city capacity is infinite
+	gain = std::min(gain, posts[homeIdx].goodsCapacity - (posts[homeIdx].goodsLoad - posts[homeIdx].populationLoad * (distanceTo + distanceFrom))); // gain if city capacity is finite
+	double wait = (maxLoad - load) / posts[idx].refillRate;
+	return gain / (distanceFrom + distanceTo + wait);
+}
+
 const std::unordered_set<int>& Map::GetStorages() {
 	return storages;
 }
