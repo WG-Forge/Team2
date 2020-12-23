@@ -53,6 +53,16 @@ double Graph::GetDistance(int from, int to)
 	return spTrees[from][to].length;
 }
 
+double Graph::GetDistance(int from, int to, int dist, int onPathTo)
+{
+	double distance = GetDistance(from, to);
+	if (GetNextOnPath(from, to) == onPathTo) {
+		distance -= dist;
+	} else {
+		distance += dist;
+	}
+}
+
 int Graph::GetNextOnPath(int from, int to) {	
 	if (from == to) {
 		return to;
@@ -62,6 +72,16 @@ int Graph::GetNextOnPath(int from, int to) {
 	}
 
 	return GetNextOnPath(spTrees[from], from, to);
+}
+
+int Graph::GetNextOnPath(int from, int to, int dist, int onPathTo)
+{
+	int next = GetNextOnPath(from, to);
+	if (next == onPathTo) {
+		return next;
+	} else {
+		return from;
+	}
 }
 
 std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList) {
