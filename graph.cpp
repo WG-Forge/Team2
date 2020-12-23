@@ -146,7 +146,7 @@ std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordere
 	dijkstra.push({ origin, -1, 0 });
 	for (size_t i = 0; i < adjacencyList.size(); i++) {
 		dijkstraData cur = { origin, -1, 0 };
-		while (((ans[cur.idx].length != -1) || (verticesBlackList.count(cur.idx) != 0) || 
+		while (((ans[cur.idx].length != -1) || ((verticesBlackList.count(cur.idx) != 0) && (cur.idx != origin)) || 
 			(edgesBlackList.count(std::make_pair(cur.prev, cur.idx)))) && (!dijkstra.empty())) {
 			cur = dijkstra.top();
 			dijkstra.pop();
