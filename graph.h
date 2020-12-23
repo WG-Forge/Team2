@@ -56,7 +56,9 @@ public:
     int TranslateEdgeIdx(size_t idx) const;
     int GetEdgeIdx(int from, int to);
     double GetDistance(int from, int to);
+    double GetDistance(int from, int to, int dist, int onPathTo);
     int GetNextOnPath(int from, int to);
+    int GetNextOnPath(int from, int to, int dist, int onPathTo);
     std::optional<double> GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
     std::optional<int> GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList); // no caching
     std::optional<double> GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList); // no caching
