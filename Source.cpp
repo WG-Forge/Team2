@@ -9,15 +9,19 @@
 
 constexpr int frameTime = 33;
 constexpr double stableThreshold = 20.0;
+constexpr int playerCount = 1;
 
 std::string generateRandomString();
 
 int main(int argC, char** argV) {
+	std::string gameName;
+	std::cout << "Enter game name or leave blank for creating game: ";
+	std::getline(std::cin, gameName);
 	try {
 		SdlManager manager{};
 		SdlWindow window{ "graph demo", 1280, 960 };
 		TextureManager textureManager = window.CreateTextureManager();
-		GameWorld world{ generateRandomString(), textureManager };
+		GameWorld world{ generateRandomString(), gameName, playerCount, textureManager };
 		bool toExit = false;
 		auto lastUpdateTime = std::chrono::high_resolution_clock::now();
 
@@ -28,8 +32,12 @@ int main(int argC, char** argV) {
 #ifndef _DEBUG
 					auto before = std::chrono::high_resolution_clock::now();
 #endif
-					world.MakeMove();
-					world.Update();
+					try {
+						world.MakeMove();
+						world.Update();
+					}
+					catch (...) {
+					}
 #ifndef _DEBUG
 					auto after = std::chrono::high_resolution_clock::now();
 					std::cout << "turn " << ++turn << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << "ms" << std::endl;
