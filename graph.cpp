@@ -217,7 +217,7 @@ std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordere
 
 int Graph::GetNextOnPath(const std::vector<spData>& spTree, int from, int to) const {
 	int ans = to;
-	while (spTree[ans].prevVertex != from) {
+	while ((spTree[ans].prevVertex != from) && (spTree[ans].prevVertex != -1)) {
 		ans = spTree[ans].prevVertex;
 	}
 	return ans;
