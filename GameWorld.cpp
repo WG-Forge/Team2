@@ -175,8 +175,10 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrain(Train& train) {
 
 std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrainTo(Train& train, int to) {
 	auto [source, onPathTo] = map.GetEdgeVertices(train.lineIdx);
+	double dist = train.position;
 	if (train.position == map.GetEdgeLength(train.lineIdx)) {
-		source = onPathTo;
+		std::swap(source, onPathTo);
+		dist = 0;
 	}
 #ifdef _PATHFINDING_DEBUG
 	std::cout << std::endl;
@@ -202,7 +204,7 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrainTo(Train& train, int
 		}
 		blackList.insert(i);
 	}
-	if (auto nextOnPath = map.GetNextOnPath(source, to, blackList, edgesBlackList, train.position, onPathTo)) {
+	if (auto nextOnPath = map.GetNextOnPath(source, to, blackList, edgesBlackList, dist, onPathTo)) {
 		next = nextOnPath.value();
 	}
 	else {
