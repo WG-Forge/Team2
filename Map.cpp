@@ -288,7 +288,7 @@ void Map::Draw(SdlWindow& window) {
 			int x = adjacencyList[i].point.x;
 			int y = adjacencyList[i].point.y;
 			window.SetDrawColor(255, 0, 0);
-			window.FillRectangle(x, y, 15, textureSide, -textureSide);
+			window.DrawRectangle(x, y, 15, textureSide, -textureSide);
 			window.SetDrawColor(0, 255, 0);
 			window.FillRectangle(x, y, 5, textureSide * (posts[i].goodsLoad / posts[i].goodsCapacity), -textureSide);
 			window.SetDrawColor(0, 0, 255);
@@ -299,13 +299,13 @@ void Map::Draw(SdlWindow& window) {
 			break;
 		case Post::PostTypes::MARKET:
 			window.SetDrawColor(255, 0, 0);
-			window.FillRectangle(adjacencyList[i].point.x, adjacencyList[i].point.y, 5, textureSide, -textureSide / 1.5);
+			window.DrawRectangle(adjacencyList[i].point.x, adjacencyList[i].point.y, 5, textureSide, -textureSide / 1.5);
 			window.SetDrawColor(0, 255, 0);
 			window.FillRectangle(adjacencyList[i].point.x, adjacencyList[i].point.y, 5, textureSide * (posts[i].goodsLoad / posts[i].goodsCapacity), -textureSide / 1.5);
 			break;
 		case Post::PostTypes::STORAGE:
 			window.SetDrawColor(255, 0, 0);
-			window.FillRectangle(adjacencyList[i].point.x, adjacencyList[i].point.y, 5, textureSide, -textureSide / 1.5);
+			window.DrawRectangle(adjacencyList[i].point.x, adjacencyList[i].point.y, 5, textureSide, -textureSide / 1.5);
 			window.SetDrawColor(0, 0, 255);
 			window.FillRectangle(adjacencyList[i].point.x, adjacencyList[i].point.y, 5, textureSide * (posts[i].armorLoad / posts[i].armorCapacity), -textureSide / 1.5);
 			break;
