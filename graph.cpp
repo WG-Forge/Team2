@@ -109,8 +109,15 @@ std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_
 		if (ans[to].length != -1) {
 			ans[to].length += dist;
 		}
+		double edgeLen = 0;
+		for (const auto& edge : adjacencyList[from].edges) {
+			if (edge.to == onPathTo) {
+				edgeLen = edge.length;
+				break;
+			}
+		}
 		if (buf[to].length != -1) {
-			buf[to].length -= dist;
+			buf[to].length += edgeLen - dist;
 		}
 		if ((ans[to].length == -1) || ((buf[to].length != -1) && (buf[to].length < ans[to].length))) {
 			ans = std::move(buf);
@@ -132,8 +139,15 @@ std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_s
 		if (ans[to].length != -1) {
 			ans[to].length += dist;
 		}
+		double edgeLen = 0;
+		for (const auto& edge : adjacencyList[from].edges) {
+			if (edge.to == onPathTo) {
+				edgeLen = edge.length;
+				break;
+			}
+		}
 		if (buf[to].length != -1) {
-			buf[to].length -= dist;
+			buf[to].length += edgeLen - dist;
 		}
 		if ((ans[to].length == -1) || ((buf[to].length != -1) && (buf[to].length < ans[to].length))) {
 			ans = std::move(buf);
