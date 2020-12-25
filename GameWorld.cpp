@@ -73,10 +73,11 @@ void GameWorld::MakeMove() {
 		}
 	}
 
-	MoveTrains();
+	
 	if (!trainsToUpgrade.empty() || !townsToUpgrade.empty()) {
 		connection.Upgrade(townsToUpgrade, trainsToUpgrade);
 	}
+	MoveTrains();
 
 	connection.EndTurn();
 }
