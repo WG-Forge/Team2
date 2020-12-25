@@ -31,8 +31,8 @@ GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManag
 	Update(connection.GetMapDynamicObjects());
 }
 
-GameWorld::GameWorld(const std::string& playerName, int playerCount, TextureManager& textureManager) : 
-		connection{ playerName, playerCount}, textureManager { textureManager },
+GameWorld::GameWorld(const std::string& playerName, const std::string& gameName, int playerCount, TextureManager& textureManager) : 
+		connection{ playerName, playerCount, gameName }, textureManager { textureManager },
 		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
 	Update(connection.GetMapDynamicObjects());
 }
