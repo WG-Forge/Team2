@@ -88,7 +88,7 @@ int Map::GetBestStorage(int from, int homeIdx, double maxLoad, double distanceEx
 	return bestIdx;
 }
 
-std::pair<int, double> Map::GetBestMarket(int from, int home, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList) {
+std::pair<int, double> Map::GetBestMarket(int from, int home, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList, int dist, int onPathTo) {
 	double maxTime = posts[home].goodsLoad / posts[home].populationLoad;
 	int bestIdx = -1;
 	double bestK = 0;
@@ -102,7 +102,7 @@ std::pair<int, double> Map::GetBestMarket(int from, int home, double maxLoad, co
 		if (GetDistance(from, i) + GetDistance(i, home) > maxTime) {
 			continue;
 		}
-		double k = GetMarketK(from, i, home, maxLoad, vBlackList, eBlackList);
+		double k = GetMarketK(from, i, home, maxLoad, vBlackList, eBlackList, dist, onPathTo);
 		if (k > bestK || bestIdx == -1) {
 			bestIdx = i;
 			bestK = k;
@@ -118,7 +118,7 @@ std::pair<int, double> Map::GetBestMarket(int from, int home, double maxLoad, co
 		if (vBlackList.count(i) != 0) {
 			continue;
 		}
-		double k = GetMarketK(from, i, home, maxLoad, vBlackList, eBlackList);
+		double k = GetMarketK(from, i, home, maxLoad, vBlackList, eBlackList, dist, onPathTo);
 		if (k > bestK || bestIdx == -1) {
 			bestIdx = i;
 			bestK = k;
@@ -127,7 +127,7 @@ std::pair<int, double> Map::GetBestMarket(int from, int home, double maxLoad, co
 	return { bestIdx, bestK };
 }
 
-std::pair<int, double> Map::GetBestStorage(int from, int home, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList) {
+std::pair<int, double> Map::GetBestStorage(int from, int home, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList, int dist, int onPathTo) {
 	int bestIdx = -1;
 	double bestK = 0;
 	for (int i = 0; i < posts.size(); ++i) {
@@ -137,7 +137,7 @@ std::pair<int, double> Map::GetBestStorage(int from, int home, double maxLoad, c
 		if (vBlackList.count(i) != 0) {
 			continue;
 		}
-		double k = GetStorageK(from, i, home, maxLoad, vBlackList, eBlackList);
+		double k = GetStorageK(from, i, home, maxLoad, vBlackList, eBlackList, dist, onPathTo);
 		if (k > bestK || bestIdx == -1) {
 			bestIdx = i;
 			bestK = k;

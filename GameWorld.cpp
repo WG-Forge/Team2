@@ -132,29 +132,7 @@ void GameWorld::MoveTrains() {
 }
 
 std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrain(Train& train) {
-	int source;
-	if (train.position == 0) {
-		source = map.GetEdgeVertices(train.lineIdx).first;
-	}
-	else if (train.position == map.GetEdgeLength(train.lineIdx)) {
-		source = map.GetEdgeVertices(train.lineIdx).second;
-	}
-	else if (train.speed == 0) {
-		if (train.position < map.GetEdgeLength(train.lineIdx) / 2) {
-			source = map.GetEdgeVertices(train.lineIdx).first;
-		}
-		else {
-			source = map.GetEdgeVertices(train.lineIdx).second;
-		}
-	}
-	else if (train.position < map.GetEdgeLength(train.lineIdx) / 2) {
-
-		source = map.GetEdgeVertices(train.lineIdx).first;
-	}
-	else {
-		source = map.GetEdgeVertices(train.lineIdx).second;
-
-	}
+	auto [source, onPathTo] = map.GetEdgeVertices(train.lineIdx);
 
 	if (train.load != 0 && train.load != train.capacity) {
 		return std::nullopt;
@@ -166,10 +144,10 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrain(Train& train) {
 			takenPosts.erase(trainsTargets[train.idx]);
 		}
 		if (!everythingUpgraded) {
-			target = map.GetBestStorage(source, target, train.capacity, takenPosts, edgesBlackList).first;
+			target = map.GetBestStorage(source, target, train.capacity, takenPosts, edgesBlackList, train.position, onPathTo).first;
 		}
 		else {
-			target = map.GetBestMarket(source, target, train.capacity, takenPosts, edgesBlackList).first;
+			target = map.GetBestMarket(source, target, train.capacity, takenPosts, edgesBlackList, train.position, onPathTo).first;
 		}
 		takenPosts.insert(target);
 		trainsTargets[train.idx] = target;
@@ -187,13 +165,7 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrain(Train& train) {
 }
 
 std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrainTo(Train& train, int to) {
-	int source;
-	if (train.position < map.GetEdgeLength(train.lineIdx) / 2) {
-		source = map.GetEdgeVertices(train.lineIdx).first;
-	}
-	else {
-		source = map.GetEdgeVertices(train.lineIdx).second;
-	}
+	auto [source, onPathTo] = map.GetEdgeVertices(train.lineIdx);
 #ifdef _PATHFINDING_DEBUG
 	std::cout << std::endl;
 	std::cout << "idx: " << train.idx;
@@ -218,7 +190,7 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrainTo(Train& train, int
 		}
 		blackList.insert(i);
 	}
-	if (auto nextOnPath = map.GetNextOnPath(source, to, blackList, edgesBlackList)) {
+	if (auto nextOnPath = map.GetNextOnPath(source, to, blackList, edgesBlackList, train.position, onPathTo)) {
 		next = nextOnPath.value();
 	}
 	else {
