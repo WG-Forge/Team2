@@ -49,7 +49,14 @@ ServerConnection::ServerConnection(const std::string& playerName, int playerCoun
 	EstablishConnection();
 	password = generateRandomPassword();
 	login = playerName;
-	SendMessage(Request::LOGIN, "{\"name\":\"" + login +  "\", \"password\":\"" + password + "\", \"num_players\":\"" + std::to_string(playerCount) + "\", \"game\":\"" + gameName + "\"}");
+	std::string req = "{\"name\":\"" + login + "\", \"password\":\"" + password + "\", \"num_players\":" + std::to_string(playerCount);
+	if (!gameName.empty()) {
+		req += ", \"game\":\"" + gameName + "\"}";
+	}
+	else {
+		req += "}";
+	}
+	SendMessage(Request::LOGIN, req);
 
 	std::stringstream responseStream = std::stringstream(GetResponse());
 	Json::Dict responseDocument = Json::Load(responseStream).GetRoot().AsMap();
@@ -312,7 +319,6 @@ std::string ServerConnection::GetResponse() {
 	std::cout << std::dec;
 	std::cout << "size = " << size << std::endl;
 #endif
-	int outBufSize = size + 1ull;
 	char* outBuf = new char[size + 1ull];
 	char* writeBuf = outBuf;
 	outBuf[size] = '\0';
@@ -326,14 +332,15 @@ std::string ServerConnection::GetResponse() {
 	}
 
 	std::string result = outBuf;
-	delete[] outBuf;
 
 	if (buf != Result::OKEY) {
 #ifdef _NETWORK_DEBUG
 		std::cout << outBuf << std::endl;
 #endif
+		delete[] outBuf;
 		throw std::runtime_error{ result };
 	}
+	delete[] outBuf;
 
 	return result;
 }
