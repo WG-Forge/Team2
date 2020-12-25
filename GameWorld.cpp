@@ -30,7 +30,13 @@ GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManag
 		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
 	Update(connection.GetMapDynamicObjects());
 }
- 
+
+GameWorld::GameWorld(const std::string& playerName, const std::string& gameName, int playerCount, TextureManager& textureManager) : 
+		connection{ playerName, playerCount, gameName }, textureManager { textureManager },
+		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
+	Update(connection.GetMapDynamicObjects());
+}
+
 void GameWorld::Update() {
 	Update(connection.GetMapDynamicObjects());
 }
