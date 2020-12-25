@@ -16,8 +16,14 @@ int main(int argC, char** argV) {
 	try {
 		SdlManager manager{};
 		SdlWindow window{ "graph demo", 1280, 960 };
+		int playerCount;
+		if (argC < 2) {
+			std::cin >> playerCount;
+		} else {
+			playerCount = std::stoi(argV[1]);
+		}
 		TextureManager textureManager = window.CreateTextureManager();
-		GameWorld world{ generateRandomString(), textureManager };
+		GameWorld world{ generateRandomString(), playerCount, textureManager };
 		bool toExit = false;
 		auto lastUpdateTime = std::chrono::high_resolution_clock::now();
 
