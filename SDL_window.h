@@ -24,6 +24,7 @@ public:
 	void DrawRectangle(int x0, int y0, int x1, int y1);
 	void DrawTexture(int xMiddle, int yMiddle, int h, int w, SDL_Texture* texture, int absoluteOffsetY = 0, bool toMirror = false);
 	void FillRectangle(int xMiddle, int yMiddle, int h, int w, int absoluteOffsetY = 0);
+	void DrawRectangle(int xMiddle, int yMiddle, int h, int w, int absoluteOffsetY);
 	void SetDrawColor(unsigned char r, unsigned char g, unsigned char b);
 	void SetScale(int width, int height);
 	void Clear();

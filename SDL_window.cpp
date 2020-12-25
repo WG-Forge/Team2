@@ -63,7 +63,15 @@ void SdlWindow::FillRectangle(int xMiddle, int yMiddle, int h, int w, int absolu
 	target.x = TranslateX(xMiddle) - w / 2;
 	target.y = absoluteOffsetY + TranslateY(yMiddle) - h / 2;
 	SDL_RenderFillRect(renderer, &target);
+}
 
+void SdlWindow::DrawRectangle(int xMiddle, int yMiddle, int h, int w, int absoluteOffsetY) {
+	SDL_Rect target;
+	target.h = h;
+	target.w = w;
+	target.x = TranslateX(xMiddle) - w / 2;
+	target.y = absoluteOffsetY + TranslateY(yMiddle) - h / 2;
+	SDL_RenderDrawRect(renderer, &target);
 }
 
 void SdlWindow::SetDrawColor(unsigned char r, unsigned char g, unsigned char b) {
