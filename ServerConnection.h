@@ -36,6 +36,7 @@ public:
 	};
 
 	ServerConnection(const std::string& playerName, bool isStrong = true); // performs login operation
+	ServerConnection(const std::string& playerName, int playerCount, const std::string& gameName, bool isStrong = true);
 	ServerConnection(const std::string& playerName, const std::string& playerPassword, bool isStrong = false, bool toEstablish = true);
 	ServerConnection(const ServerConnection& other) = delete;
 	ServerConnection(ServerConnection&& other) noexcept;

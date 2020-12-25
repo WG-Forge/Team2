@@ -43,6 +43,21 @@ ServerConnection::ServerConnection(const std::string& playerName, bool isStrong)
 	homeIdx = home["idx"].AsInt();
 }
 
+ServerConnection::ServerConnection(const std::string& playerName, int playerCount, const std::string& gameName, bool isStrong) {
+	this->isStrong = isStrong;
+	isOriginal = isStrong;
+	EstablishConnection();
+	password = generateRandomPassword();
+	login = playerName;
+	SendMessage(Request::LOGIN, "{\"name\":\"" + login +  "\", \"password\":\"" + password + "\", \"num_players\":\"" + std::to_string(playerCount) + "\", \"game\":\"" + gameName + "\"}");
+
+	std::stringstream responseStream = std::stringstream(GetResponse());
+	Json::Dict responseDocument = Json::Load(responseStream).GetRoot().AsMap();
+	playerIdx = responseDocument["idx"].AsString();
+	auto home = responseDocument["home"].AsMap();
+	homeIdx = home["idx"].AsInt();
+}
+
 ServerConnection::ServerConnection(const std::string& playerName, const std::string& playerPassword, bool isStrong, bool toEstablish) {
 	this->isEstablished = toEstablish;
 	this->isStrong = isStrong;
