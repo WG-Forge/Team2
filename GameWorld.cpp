@@ -152,7 +152,7 @@ void GameWorld::MoveTrains() {
 		}
 	}
 	while (helpConnections.size() < trainsCount) {
-		helpConnections.emplace_back(connection.GetLogin(), connection.GetPassword(), false, false);
+		helpConnections.emplace_back(connection.GetLogin(), connection.GetPassword(), connection.GetGameName(), false, false);
 	}
 	for (int i = 0; i < trainsCount; ++i) {
 		helpThreads.emplace_back(makeMoveRequest, std::get<0>(moveData[i]), std::get<1>(moveData[i]), std::get<2>(moveData[i]), std::ref(helpConnections[i]));
