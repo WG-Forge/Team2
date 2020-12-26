@@ -26,6 +26,7 @@ private:
 
 	std::vector<ServerConnection> helpConnections;
 	bool everythingUpgraded = false;
+	int marketsToFocus;
 	ServerConnection connection;
 	TextureManager& textureManager;
 	Map map;

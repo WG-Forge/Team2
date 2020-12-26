@@ -1,6 +1,7 @@
 #include "GameWorld.h"
 #include "json.h"
 #include <sstream>
+#include <algorithm>
 #include <unordered_set>
 
 #define PATHFINDING_DEBUG
@@ -51,10 +52,21 @@ void GameWorld::MakeMove() {
 	for (const auto& [idx, target] : trainsTargets) {
 		takenPosts.insert(target);
 	}
-	int armor = map.GetArmor(map.TranslateVertexIdx(connection.GetHomeIdx()));
+	int armor = map.GetArmor(map.TranslateVertexIdx(connection.GetHomeIdx())) - 5;
 	auto town = GetPosition(map.TranslateVertexIdx(connection.GetHomeIdx()));
 	std::vector<size_t> trainsToUpgrade;
 	everythingUpgraded = true;
+	std::vector<size_t> townsToUpgrade;
+
+	if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) == 1) {
+		everythingUpgraded = false;
+		int price = map.GetNextLevelPrice(map.TranslateVertexIdx(connection.GetHomeIdx()));
+		if (price <= armor) {
+			townsToUpgrade.push_back(map.GetPostIdx(map.TranslateVertexIdx(connection.GetHomeIdx())));
+			armor -= price;
+		}
+	}
+
 	for (const auto& i : trains) {
 		if (i.level >= 3) {
 			continue;
@@ -69,13 +81,13 @@ void GameWorld::MakeMove() {
 			trainsToUpgrade.push_back(i.idx);
 		}
 	}
-	std::vector<size_t> townsToUpgrade;
 
-	if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) < 3) {
+	if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) == 2) {
 		everythingUpgraded = false;
 		int price = map.GetNextLevelPrice(map.TranslateVertexIdx(connection.GetHomeIdx()));
 		if (price <= armor) {
 			townsToUpgrade.push_back(map.GetPostIdx(map.TranslateVertexIdx(connection.GetHomeIdx())));
+			armor -= price;
 		}
 	}
 
@@ -98,10 +110,26 @@ void GameWorld::Update(const std::string& jsonData) {
 }
 
 void GameWorld::MoveTrains() {
+#ifdef _PATHFINDING_DEBUG
+	std::cout << std::endl;
+	for (auto i : edgesBlackList) {
+		std::cout << std::endl << i.first << ' ' << i.second;
+	}
+#endif
+	std::sort(trains.begin(), trains.end(), [](const Train& a, const Train& b) {return a.level > b.level; });
 	std::vector<std::thread> helpThreads;
 	std::vector<TrainMoveData> moveData;
 	int trainsCount = 0;
 	int count = 0;
+	if (map.GetPopulation(map.TranslateVertexIdx(connection.GetHomeIdx())) > 7) {
+		marketsToFocus = 4;
+	}
+	else if (map.GetPopulation(map.TranslateVertexIdx(connection.GetHomeIdx())) > 4){
+		marketsToFocus = 3;
+	}
+	else {
+		marketsToFocus = 2;
+	}
 	for (auto& i : trains) {
 		if (i.cooldown != 0) {
 			if (trainsTargets.count(i.idx)) {
@@ -140,6 +168,9 @@ void GameWorld::MoveTrains() {
 
 std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrain(Train& train) {
 	auto [source, onPathTo] = map.GetEdgeVertices(train.lineIdx);
+	if (marketsToFocus) {
+		--marketsToFocus;
+	}
 	if (train.position == map.GetEdgeLength(train.lineIdx)) {
 		source = onPathTo;
 	}
@@ -152,7 +183,10 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrain(Train& train) {
 		if (trainsTargets.count(train.idx)) {
 			takenPosts.erase(trainsTargets[train.idx]);
 		}
-		if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) < 3) {
+		if (marketsToFocus) {
+			target = map.GetBestMarket(source, target, train.capacity, takenPosts, edgesBlackList, train.position, onPathTo).first;
+		}
+		else if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) < 3) {
 			target = map.GetBestStorage(source, target, train.capacity, takenPosts, edgesBlackList, train.position, onPathTo).first;
 		}
 		else if (train.level < 3) {
@@ -177,11 +211,28 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrain(Train& train) {
 }
 
 std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrainTo(Train& train, int to) {
+	auto [first, second] = map.GetEdgeVertices(train.lineIdx);
 	auto [source, onPathTo] = map.GetEdgeVertices(train.lineIdx);
 	double dist = train.position;
-	if (train.position > map.GetEdgeLength(train.lineIdx) / 2) {
+	if (train.position >= map.GetEdgeLength(train.lineIdx) / 2) {
 		std::swap(source, onPathTo);
 		dist = map.GetEdgeLength(train.lineIdx) - train.position;
+	}
+	if (first == source) {
+		for (int i = 0; i < train.position; ++i) {
+			if (takenPositions.count(GetPosition(train.lineIdx, i))) {
+				std::swap(source, onPathTo);
+				dist = map.GetEdgeLength(train.lineIdx) - train.position;
+			}
+		}
+	}
+	else {
+		for (int i = map.GetEdgeLength(train.lineIdx) - 0.5; i > train.position; --i) {
+			if (takenPositions.count(GetPosition(train.lineIdx, i))) {
+				std::swap(source, onPathTo);
+				dist = train.position;
+			}
+		}
 	}
 #ifdef _PATHFINDING_DEBUG
 	std::cout << std::endl;
@@ -190,19 +241,13 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrainTo(Train& train, int
 	std::cout << "; target: " << to;
 #endif
 
-	int next;
-	std::unordered_set<int> blackList = map.GetMarkets();
-	if (train.load == train.capacity) {
-		blackList.clear();
-	}
-	else if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) < 3) {
-		blackList = map.GetMarkets();
-	}
-	else if (train.level < 3) {
-		blackList = map.GetMarkets();
-	}
-	else {
+	std::unordered_set<int> blackList;
+	switch (map.GetPostType(to)) {
+	case Post::PostTypes::MARKET:
 		blackList = map.GetStorages();
+		break;
+	case Post::PostTypes::STORAGE:
+		blackList = map.GetMarkets();
 	}
 	for (auto [t, i] : trainsTargets) {
 		if (t == train.idx) {
@@ -210,6 +255,7 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrainTo(Train& train, int
 		}
 		blackList.insert(i);
 	}
+	int next;
 	if (auto nextOnPath = map.GetNextOnPath(source, to, blackList, edgesBlackList, dist, onPathTo)) {
 		next = nextOnPath.value();
 	}
