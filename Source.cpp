@@ -8,27 +8,45 @@
 #include <random>
 
 constexpr int frameTime = 33;
-constexpr double stableThreshold = 20.0;
+constexpr int playerCount = 1;
 
 std::string generateRandomString();
 
 int main(int argC, char** argV) {
+	std::string gameName;
+	std::cout << "Enter game name or leave blank for creating game: ";
+	std::getline(std::cin, gameName);
 	try {
 		SdlManager manager{};
 		SdlWindow window{ "graph demo", 1280, 960 };
 		TextureManager textureManager = window.CreateTextureManager();
-		GameWorld world{ generateRandomString(), textureManager };
+		GameWorld world{ generateRandomString(), gameName, playerCount, textureManager };
 		bool toExit = false;
 		auto lastUpdateTime = std::chrono::high_resolution_clock::now();
 
 		std::thread updateThread{ [&world, &toExit]() {
 			try {
+#ifndef _DEBUG
+				int turn = 0;
+#endif
 				while (!toExit) {
+#ifndef _DEBUG
 					auto before = std::chrono::high_resolution_clock::now();
-					world.Update();
-					world.MakeMove();
+#endif
+					try {
+						world.MakeMove();
+						world.Update();
+					}
+					catch (const std::runtime_error& e) {
+#ifndef _DEBUG
+						std::cout << e.what() << std::endl;
+						--turn;
+#endif
+					}
+#ifndef _DEBUG
 					auto after = std::chrono::high_resolution_clock::now();
-					std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << "ms" << std::endl;
+					std::cout << "turn " << ++turn << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << "ms" << std::endl;
+#endif
 				}
 			}
 			catch (const std::runtime_error& error) {
@@ -40,15 +58,8 @@ int main(int argC, char** argV) {
 			}
 		} };
 
-		std::thread forceThread{ [&world, &toExit]() {
-			double change = stableThreshold;
-			while (!toExit && change >= stableThreshold) {
-				change = world.ApplyForce();
-			}
-		} };
-
 		while (!(toExit = window.HasCloseRequest())) {
-			window.SetDrawColor(35, 23, 0);
+			window.SetDrawColor(90, 90, 90);
 			window.Clear();
 			world.Draw(window);
 
@@ -61,7 +72,6 @@ int main(int argC, char** argV) {
 		}
 		window.Close();
 		updateThread.join();
-		forceThread.join();
 	}
 	catch (const std::runtime_error& error) {
 		std::cout << "got unexpected error: " << error.what() << std::endl;

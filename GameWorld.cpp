@@ -1,22 +1,44 @@
 #include "GameWorld.h"
-#include <sstream>
 #include "json.h"
+#include <sstream>
+#include <unordered_set>
+
+#define PATHFINDING_DEBUG
+
+#ifdef _DEBUG
+#ifdef PATHFINDING_DEBUG
+#define _PATHFINDING_DEBUG
+#endif
+#endif
+
+void makeMoveRequest(int lineIdx, int speed, int trainIdx, ServerConnection& connection) {
+	try {
+		if (!connection.IsEstablished()) {
+			connection.Establish();
+		}
+		connection.MoveTrain(lineIdx, speed, trainIdx);
+	}
+	catch (std::runtime_error& error) {
+		std::cout << error.what() << std::endl;
+#ifdef _PATHFINDING_DEBUG
+		throw;
+#endif
+	}
+}
 
 GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManager) : connection{ playerName },	textureManager{textureManager},
 		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
-	UpdateTrains(connection.GetMapDynamicObjects());
+	Update(connection.GetMapDynamicObjects());
 }
 
-double GameWorld::ApplyForce()
-{
-	double res = map.ApplyForce();
-	return res;
+GameWorld::GameWorld(const std::string& playerName, const std::string& gameName, int playerCount, TextureManager& textureManager) : 
+		connection{ playerName, playerCount, gameName }, textureManager { textureManager },
+		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
+	Update(connection.GetMapDynamicObjects());
 }
- 
+
 void GameWorld::Update() {
-	std::string dynamicObjects = connection.GetMapDynamicObjects();
-	map.Update(dynamicObjects);
-	UpdateTrains(dynamicObjects);
+	Update(connection.GetMapDynamicObjects());
 }
 
 void GameWorld::Draw(SdlWindow& window) {
@@ -24,100 +46,277 @@ void GameWorld::Draw(SdlWindow& window) {
 	DrawTrains(window);
 }
 
+void GameWorld::MakeMove() {
+	takenPosts.clear();
+	for (const auto& [idx, target] : trainsTargets) {
+		takenPosts.insert(target);
+	}
+	int armor = map.GetArmor(map.TranslateVertexIdx(connection.GetHomeIdx()));
+	auto town = GetPosition(map.TranslateVertexIdx(connection.GetHomeIdx()));
+	std::vector<size_t> trainsToUpgrade;
+	everythingUpgraded = true;
+	for (const auto& i : trains) {
+		if (i.level >= 3) {
+			continue;
+		}
+		everythingUpgraded = false;
+		if (town != GetPosition(i.lineIdx, i.position)) {
+			continue;
+		}
+		if (i.nextLevelPrice <= armor) {
+
+			armor -= i.nextLevelPrice;
+			trainsToUpgrade.push_back(i.idx);
+		}
+	}
+	std::vector<size_t> townsToUpgrade;
+
+	if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) < 3) {
+		everythingUpgraded = false;
+		int price = map.GetNextLevelPrice(map.TranslateVertexIdx(connection.GetHomeIdx()));
+		if (price <= armor) {
+			townsToUpgrade.push_back(map.GetPostIdx(map.TranslateVertexIdx(connection.GetHomeIdx())));
+		}
+	}
+
+	
+	if (!trainsToUpgrade.empty() || !townsToUpgrade.empty()) {
+		connection.Upgrade(townsToUpgrade, trainsToUpgrade);
+	}
+	MoveTrains();
+
+	connection.EndTurn();
+}
+
+void GameWorld::Update(const std::string& jsonData) {
+	map.Update(jsonData);
+	whitePositions.clear();
+	for (int i : map.GetTowns()) {
+		whitePositions.insert(GetPosition(i));
+	}
+	UpdateTrains(jsonData);
+}
+
 void GameWorld::MoveTrains() {
+	std::vector<std::thread> helpThreads;
+	std::vector<TrainMoveData> moveData;
+	int trainsCount = 0;
+	int count = 0;
 	for (auto& i : trains) {
+		if (i.cooldown != 0) {
+			if (trainsTargets.count(i.idx)) {
+				trainsTargets.erase(i.idx);
+			}
+			continue;
+		}
 		if (i.owner != connection.GetPlayerIdx()) {
 			continue;
 		}
-		MoveTrain(i);
+		for (uint64_t i : whitePositions) {
+			if (takenPositions.count(i)) {
+				takenPositions.erase(i);
+			}
+		}
+		for (int i : map.GetTowns()) {
+			if (pointBlackList.count(i)) {
+				pointBlackList.erase(i);
+			}
+		}
+		if (auto trainMove = MoveTrain(i)) {
+			++trainsCount;
+			moveData.push_back(*trainMove);
+		}
+	}
+	while (helpConnections.size() < trainsCount) {
+		helpConnections.emplace_back(connection.GetLogin(), connection.GetPassword(), false, false);
+	}
+	for (int i = 0; i < trainsCount; ++i) {
+		helpThreads.emplace_back(makeMoveRequest, std::get<0>(moveData[i]), std::get<1>(moveData[i]), std::get<2>(moveData[i]), std::ref(helpConnections[i]));
+	}
+	for (int i = 0; i < trainsCount; ++i) {
+		helpThreads[i].join();
 	}
 }
 
-void GameWorld::MoveTrain(Train& train) {
-	int to;
-	int from;
-	double distanceExtra;
-	double edgeLength = map.GetEdgeLength(train.trueLineIdx);
-	auto [first, second] = map.GetEdgeVertices(train.trueLineIdx);
-
-	if (train.lineIdx != train.trueLineIdx) {
-		auto [firstOld, secondOld] = map.GetEdgeVertices(train.lineIdx);
-		if (first == firstOld) {
-			train.truePosition = 0.0;
-		}
-		else if (first == secondOld) {
-			train.truePosition = 0.0;
-		}
-		else if (second == firstOld) {
-			train.truePosition = edgeLength;
-		}
-		else if (second == secondOld) {
-			train.truePosition = edgeLength;
-		}
+std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrain(Train& train) {
+	auto [source, onPathTo] = map.GetEdgeVertices(train.lineIdx);
+	if (train.position == map.GetEdgeLength(train.lineIdx)) {
+		source = onPathTo;
+	}
+	if (train.load != 0 && train.load != train.capacity) {
+		return std::nullopt;
 	}
 
-	if (train.truePosition >= edgeLength / 2) {
-		from = second;
-		distanceExtra = train.truePosition - edgeLength;
+	int target = map.TranslateVertexIdx(connection.GetHomeIdx());
+	if (train.load == 0) {
+		if (trainsTargets.count(train.idx)) {
+			takenPosts.erase(trainsTargets[train.idx]);
+		}
+		if (!everythingUpgraded) {
+			target = map.GetBestStorage(source, target, train.capacity, takenPosts, edgesBlackList, train.position, onPathTo).first;
+		}
+		else {
+			target = map.GetBestMarket(source, target, train.capacity, takenPosts, edgesBlackList, train.position, onPathTo).first;
+		}
+		takenPosts.insert(target);
+		trainsTargets[train.idx] = target;
 	}
 	else {
-		from = first;
-		distanceExtra = train.truePosition;
+		if (trainsTargets.count(train.idx)) {
+			if (takenPosts.count(trainsTargets[train.idx])) {
+				takenPosts.erase(trainsTargets[train.idx]);
+			}
+			trainsTargets.erase(train.idx);
+		}
 	}
 
-	if (train.load < train.capacity) {
-		to = map.GetBestMarket(from, map.TranslateVertexIdx(connection.GetHomeIdx()), train.capacity - train.load, distanceExtra);
-	}
-	else {
-		to = map.TranslateVertexIdx(connection.GetHomeIdx());
-	}
-	MoveTrainTo(train, to);
+	return MoveTrainTo(train, target);
 }
 
-void GameWorld::MoveTrainTo(Train& train, int to) {
-	auto [first, second] = map.GetEdgeVertices(train.trueLineIdx);
-	if (train.truePosition == 0.0) {
-		to = map.GetNextOnPath(first, to);
-		if (to == first) {
-			connection.MoveTrain(train.trueLineIdx, 0, train.idx);
-		}
-		else if (to == second) {
-			connection.MoveTrain(train.trueLineIdx, 1, train.idx);
-		}
-		else {
-			connection.MoveTrain(map.GetEdgeIdx(first, to), -1, train.idx);
-			train.trueLineIdx = map.GetEdgeIdx(first, to);
-			MoveTrain(train);
-		}
+std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrainTo(Train& train, int to) {
+	auto [source, onPathTo] = map.GetEdgeVertices(train.lineIdx);
+	double dist = train.position;
+	if (train.position == map.GetEdgeLength(train.lineIdx)) {
+		std::swap(source, onPathTo);
+		dist = 0;
 	}
-	else if (train.truePosition == map.GetEdgeLength(train.trueLineIdx)) {
-		to = map.GetNextOnPath(second, to);
-		if (to == second) {
-			connection.MoveTrain(train.trueLineIdx, 0, train.idx);
+#ifdef _PATHFINDING_DEBUG
+	std::cout << std::endl;
+	std::cout << "idx: " << train.idx;
+	std::cout << "; source: " << source;
+	std::cout << "; target: " << to;
+#endif
+
+	int next;
+	std::unordered_set<int> blackList = map.GetMarkets();
+	if (train.load == train.capacity) {
+		blackList.clear();
+	}
+	else if (everythingUpgraded) {
+		blackList = map.GetStorages();
+	}
+	else {
+		blackList = map.GetMarkets();
+	}
+	for (auto [t, i] : trainsTargets) {
+		if (t == train.idx) {
+			continue;
 		}
-		else if (to == first) {
-			connection.MoveTrain(train.trueLineIdx, -1, train.idx);
+		blackList.insert(i);
+	}
+	if (auto nextOnPath = map.GetNextOnPath(source, to, blackList, edgesBlackList, dist, onPathTo)) {
+		next = nextOnPath.value();
+	}
+	else {
+#ifdef _PATHFINDING_DEBUG
+		std::cout << "; NO PATH ";
+#endif
+		return std::nullopt;
+	}
+
+#ifdef _PATHFINDING_DEBUG
+	std::cout << "; via: " << next;
+#endif
+	if (train.position == 0 || train.position == map.GetEdgeLength(train.lineIdx)) {
+		auto [first, second] = map.GetEdgeVertices(map.GetEdgeIdx(source, next));
+		if (next == first) {
+			uint64_t nextPosition = GetNextPosition(train.lineIdx, map.GetEdgeIdx(first, second), train.position, -1);
+			if (takenPositions.count(nextPosition)) {
+#ifdef _PATHFINDING_DEBUG
+				std::cout << "; CAN'T MOVE ";
+#endif
+				return TrainMoveData{ train.lineIdx, 0, train.idx };
+			}
+			uint64_t currentPosition = GetPosition(train.lineIdx, train.position);
+			if (takenPositions.count(currentPosition)) {
+				takenPositions.erase(currentPosition);
+			}
+			takenPositions.insert(nextPosition);
+			return TrainMoveData{ map.GetEdgeIdx(first, second), -1, train.idx };
 		}
 		else {
-			connection.MoveTrain(map.GetEdgeIdx(second, to), 1, train.idx);
-			train.trueLineIdx = map.GetEdgeIdx(second, to);
-			MoveTrain(train);
+			uint64_t nextPosition = GetNextPosition(train.lineIdx, map.GetEdgeIdx(first, second), train.position, 1);
+			if (takenPositions.count(nextPosition)) {
+#ifdef _PATHFINDING_DEBUG
+				std::cout << "; CAN'T MOVE ";
+#endif
+				return TrainMoveData{ train.lineIdx, 0, train.idx };
+			}
+			uint64_t currentPosition = GetPosition(train.lineIdx, train.position);
+			if (takenPositions.count(currentPosition)) {
+				takenPositions.erase(currentPosition);
+			}
+			takenPositions.insert(nextPosition);
+			return TrainMoveData{ map.GetEdgeIdx(first, second), 1, train.idx };
 		}
 	}
 	else {
-		to = map.GetNextOnPath(first, to);
-		if (to == second) {
-			connection.MoveTrain(train.trueLineIdx, 1, train.idx);
+		auto [first, second] = map.GetEdgeVertices(train.lineIdx);
+		if (next == first) {
+			uint64_t nextPosition = GetNextPosition(train.lineIdx, train.position, -1);
+			if (takenPositions.count(nextPosition)) {
+#ifdef _PATHFINDING_DEBUG
+				std::cout << "; CAN'T MOVE ";
+#endif
+				return TrainMoveData{ train.lineIdx, 0, train.idx };
+			}
+			uint64_t currentPosition = GetPosition(train.lineIdx, train.position);
+			if (takenPositions.count(currentPosition)) {
+				takenPositions.erase(currentPosition);
+			}
+			takenPositions.insert(nextPosition);
+
+			return TrainMoveData{ train.lineIdx, -1, train.idx };
+		}
+		else if (next == second) {
+			uint64_t nextPosition = GetNextPosition(train.lineIdx, train.position, 1);
+			if (takenPositions.count(nextPosition)) {
+#ifdef _PATHFINDING_DEBUG
+				std::cout << "; CAN'T MOVE ";
+#endif
+				return TrainMoveData{ train.lineIdx, 0, train.idx };
+			}
+			uint64_t currentPosition = GetPosition(train.lineIdx, train.position);
+			if (takenPositions.count(currentPosition)) {
+				takenPositions.erase(currentPosition);
+			}
+			takenPositions.insert(nextPosition);
+			return TrainMoveData{ train.lineIdx, 1, train.idx };
+		}
+		else if (source == first) {
+			uint64_t nextPosition = GetNextPosition(train.lineIdx, train.position, -1);
+			if (takenPositions.count(nextPosition)) {
+#ifdef _PATHFINDING_DEBUG
+				std::cout << "; CAN'T MOVE ";
+#endif
+				return TrainMoveData{ train.lineIdx, 0, train.idx };
+			}
+			uint64_t currentPosition = GetPosition(train.lineIdx, train.position);
+			if (takenPositions.count(currentPosition)) {
+				takenPositions.erase(currentPosition);
+			}
+			takenPositions.insert(nextPosition);
+			return TrainMoveData{ train.lineIdx, -1, train.idx };
+		}
+		else if (source == second) {
+			uint64_t nextPosition = GetNextPosition(train.lineIdx, train.position, 1);
+			if (takenPositions.count(nextPosition)) {
+#ifdef _PATHFINDING_DEBUG
+				std::cout << "; CAN'T MOVE ";
+#endif
+				return TrainMoveData{ train.lineIdx, 0, train.idx };
+			}
+			uint64_t currentPosition = GetPosition(train.lineIdx, train.position);
+			if (takenPositions.count(currentPosition)) {
+				takenPositions.erase(currentPosition);
+			}
+			takenPositions.insert(nextPosition);
+			return TrainMoveData{ train.lineIdx, 1, train.idx };
 		}
 		else {
-			connection.MoveTrain(train.trueLineIdx, -1, train.idx);
+			throw std::runtime_error{ "wtf" };
 		}
 	}
-}
-
-void GameWorld::MakeMove() {
-	MoveTrains();
-	connection.EndTurn();
 }
 
 void GameWorld::UpdateTrains(const std::string& jsonData) {
@@ -127,19 +326,60 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 	auto nodeMap = doc.GetRoot().AsMap();
 	trainIdxConverter.clear();
 	trains.clear();
+	edgesBlackList.clear();
+	pointBlackList.clear();
+	takenPositions.clear();
 	trains.reserve(nodeMap["trains"].AsArray().size());
 	for (const auto& node : nodeMap["trains"].AsArray()) {
 		auto trainMap = node.AsMap();
 		trainIdxConverter[trainMap["idx"].AsInt()] = trains.size();
 		trains.emplace_back( static_cast<size_t>(trainMap["idx"].AsInt()), static_cast<size_t>(trainMap["line_idx"].AsInt()), 
 			trainMap["position"].AsDouble(), trainMap["speed"].AsDouble());
-		trains[trains.size() - 1].capacity = trainMap["goods_capacity"].AsDouble();
-		trains[trains.size() - 1].load = trainMap["goods"].AsDouble();
-		trains[trains.size() - 1].owner = trainMap["player_idx"].AsString();
+		Train& train = *trains.rbegin();
+		train.capacity = trainMap["goods_capacity"].AsDouble();
+		train.load = trainMap["goods"].AsDouble();
+		train.owner = trainMap["player_idx"].AsString();
+		train.cooldown = trainMap["cooldown"].AsInt();
+		train.level = trainMap["level"].AsInt();
+
+
+		if (train.owner == connection.GetPlayerIdx()) {
+			if (train.level < 3) {
+				train.nextLevelPrice = trainMap["next_level_price"].AsInt();
+			}
+			takenPositions.insert(GetPosition(train.lineIdx, train.position));
+		}
+		else {
+			takenPositions.insert(GetNextPosition(train.lineIdx, train.position, train.speed));
+		}
+
+		if (train.speed == -1.0) {
+			edgesBlackList.insert(map.GetEdgeVertices(train.lineIdx));
+		}
+		else if (train.speed == 1.0) {
+			std::pair<int, int> edge = map.GetEdgeVertices(train.lineIdx);
+			std::swap(edge.first, edge.second);
+			edgesBlackList.insert(edge);
+		}
+		else {
+			if (train.position == 0) {
+				pointBlackList.insert(map.GetEdgeVertices(train.lineIdx).first);
+			}
+			else if (train.position == map.GetEdgeLength(train.lineIdx)) {
+				pointBlackList.insert(map.GetEdgeVertices(train.lineIdx).second);
+			}
+			else {
+				std::pair<int, int> edge = map.GetEdgeVertices(train.lineIdx);
+				edgesBlackList.insert(edge);
+				std::swap(edge.first, edge.second);
+				edgesBlackList.insert(edge);
+			}
+		}
 	}
 }
 
 void GameWorld::DrawTrains(SdlWindow& window) {
+	int k = 0;
 	for (const auto& i : trains) {
 		double from, to;
 		std::pair<int, int> vertices = map.GetEdgeVertices(i.lineIdx);
@@ -165,12 +405,77 @@ void GameWorld::DrawTrains(SdlWindow& window) {
 		double x = a.first + (b.first - a.first) * (i.position / edgeLength);
 		double y = a.second + (b.second - a.second) * (i.position / edgeLength);
 		SDL_Texture* texture;
-		if (i.speed != 0) {
-			texture = textureManager["assets\\train.png"];
-		}
-		else {
-			texture = textureManager["assets\\train_no_smoke.png"];
+		switch (i.level) {
+		case 1:
+			texture = textureManager["assets\\train1.png"];
+			break;
+		case 2:
+			texture = textureManager["assets\\train2.png"];
+			break;
+		case 3:
+			texture = textureManager["assets\\train3.png"];
+			break;
+		default:
+			texture = textureManager["assets\\train1.png"];
 		}
 		window.DrawTexture(x, y, 40, 40, texture, 0.0, toMirror);
+	}
+}
+
+uint64_t GameWorld::GetPosition(int vertex) {
+	uint64_t result = 0;
+	result |= vertex;
+	return result;
+}
+
+uint64_t GameWorld::GetPosition(int lineIdx, double position) {
+	auto [first, second] = map.GetEdgeVertices(lineIdx);
+	double lineLength = map.GetEdgeLength(lineIdx);
+	uint64_t result = 0;
+	if (position == 0.0) {
+		result |= first;
+	}
+	else if (position == lineLength) {
+		result |= second;
+	}
+	else {
+		result |= lineIdx;
+		int positionInt = position;
+		result <<= 32;
+		result |= positionInt;
+	}
+	return result;
+}
+
+uint64_t GameWorld::GetNextPosition(int lineIdx, double position, int speed) {
+	if (speed == 0) {
+		return GetPosition(lineIdx, position);
+	}
+
+	if (position == 0.0 && speed == -1) {
+		return GetPosition(lineIdx, position);
+	}
+
+	if (position == map.GetEdgeLength(lineIdx) && speed == 1) {
+		return GetPosition(lineIdx, position);
+	}
+
+	return GetPosition(lineIdx, position + speed);
+}
+
+uint64_t GameWorld::GetNextPosition(int prevLineIdx, int lineIdx, double position, int speed) {
+	int source;
+	if (position == 0) {
+		source = map.GetEdgeVertices(prevLineIdx).first;
+	}
+	else {
+		source = map.GetEdgeVertices(prevLineIdx).second;
+	}
+	auto [first, second] = map.GetEdgeVertices(lineIdx);
+	if (source == first) {
+		return GetNextPosition(lineIdx, 0.0, speed);
+	}
+	else {
+		return GetNextPosition(lineIdx, map.GetEdgeLength(lineIdx), speed);
 	}
 }

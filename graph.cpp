@@ -4,9 +4,6 @@
 #include <fstream>
 #include <sstream>
 #include <queue>
-#ifdef _DEBUG
-#include <iostream>
-#endif
 
 constexpr double PI = 3.141592653589793238463;
 constexpr double X_MIDDLE = 400;
@@ -30,16 +27,13 @@ Graph::Graph(const std::string& jsonStructureData, const std::string& jsonCoordi
 		ParseCoordinates(ss);
 	}
 	spTrees.resize(adjacencyList.size());
-#ifdef _DEBUG
-	std::cout << "vertex count: " << adjacencyList.size() << std::endl;
-#endif
 }
 
 int Graph::TranslateVertexIdx(size_t idx) const {
 	return idxConverter.at(idx);
 }
 
-int Graph::GetEdgeIdx(int from, int to) {
+int Graph::GetEdgeIdx(int from, int to) const {
 	for (const auto& i : adjacencyList[from].edges) {
 		if (i.to == to) {
 			return i.idx;
@@ -48,33 +42,128 @@ int Graph::GetEdgeIdx(int from, int to) {
 	return 0;
 }
 
-double Graph::GetDistance(int from, int to)
-{
+double Graph::GetDistance(int from, int to) const {
 	if (from == to) {
 		return 0.0;
 	}
 	if (spTrees[from].empty()) {
-		GenerateSpTree(from);
+		spTrees[from] = GenerateSpTree(from);
 	}
 	return spTrees[from][to].length;
 }
 
-int Graph::GetNextOnPath(int from, int to) {	
+double Graph::GetDistance(int from, int to, int dist, int onPathTo) const {
+	double distanceReturn = GetDistance(from, to) + dist;
+	double distanceContinue = GetDistance(onPathTo, to);
+	for (const auto& edge : adjacencyList[from].edges) {
+		if (edge.to == onPathTo) {
+			distanceContinue += edge.length - dist;
+			break;
+		}
+	}
+	return std::min(distanceReturn, distanceContinue);
+}
+
+int Graph::GetNextOnPath(int from, int to) const {	
 	if (from == to) {
 		return to;
 	}
 	if (spTrees[from].empty()) {
-		GenerateSpTree(from);
+		spTrees[from] = GenerateSpTree(from);
 	}
 
 	return GetNextOnPath(spTrees[from], from, to);
 }
 
-std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) {
-	return edgesData[originalEdgeIdx];
+int Graph::GetNextOnPath(int from, int to, int dist, int onPathTo) const {
+	if (GetDistance(from, to, dist, onPathTo) == GetDistance(from, to)) {
+		return from;
+	} else {
+		return onPathTo;
+	}
 }
 
-double Graph::GetEdgeLength(int originalEdgeIdx) {
+std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList) const {
+ 	auto ans = GenerateSpTree(from, verticesBlackList);
+	if (ans[to].length == -1) {
+		return std::nullopt;
+	}
+	return ans[to].length;
+}
+
+std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList) const {
+	if (from == to) {
+		return to;
+	}
+	auto ans = GenerateSpTree(from, verticesBlackList);
+	if (ans[to].length == -1) {
+		return std::nullopt;
+	}
+	return GetNextOnPath(ans, from, to);
+}
+
+std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList, int dist, int onPathTo) const {
+	auto ans = GenerateSpTree(from, verticesBlackList, edgesBlackList);
+	if (dist != 0) {
+		auto buf = GenerateSpTree(onPathTo, verticesBlackList, edgesBlackList);
+		if (ans[to].length != -1) {
+			ans[to].length += dist;
+		}
+		double edgeLen = 0;
+		for (const auto& edge : adjacencyList[from].edges) {
+			if (edge.to == onPathTo) {
+				edgeLen = edge.length;
+				break;
+			}
+		}
+		if (buf[to].length != -1) {
+			buf[to].length += edgeLen - dist;
+		}
+		if ((ans[to].length == -1) || ((buf[to].length != -1) && (buf[to].length < ans[to].length))) {
+			ans = std::move(buf);
+		}
+	}
+	if (ans[to].length == -1) {
+		return std::nullopt;
+	}
+	return ans[to].length;
+}
+
+std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList, int dist, int onPathTo) const {
+	if (from == to) {
+		return to;
+	}
+	auto ans = GenerateSpTree(from, verticesBlackList, edgesBlackList);
+	if (dist != 0) {
+		auto buf = GenerateSpTree(onPathTo, verticesBlackList, edgesBlackList);
+		if (ans[to].length != -1) {
+			ans[to].length += dist;
+		}
+		double edgeLen = 0;
+		for (const auto& edge : adjacencyList[from].edges) {
+			if (edge.to == onPathTo) {
+				edgeLen = edge.length;
+				break;
+			}
+		}
+		if (buf[to].length != -1) {
+			buf[to].length += edgeLen - dist;
+		}
+		if ((ans[to].length == -1) || ((buf[to].length != -1) && (buf[to].length < ans[to].length))) {
+			ans = std::move(buf);
+		}
+	}
+	if (ans[to].length == -1) {
+		return std::nullopt;
+	}
+	return GetNextOnPath(ans, from, to);
+}
+
+std::pair<int, int> Graph::GetEdgeVertices(int originalEdgeIdx) const {
+	return edgesData.at(originalEdgeIdx);
+}
+
+double Graph::GetEdgeLength(int originalEdgeIdx) const {
 	for (const auto& j : adjacencyList[GetEdgeVertices(originalEdgeIdx).first].edges) {
 		if (j.idx == originalEdgeIdx) {
 			return j.length;
@@ -83,7 +172,7 @@ double Graph::GetEdgeLength(int originalEdgeIdx) {
 	return 0.0;
 }
 
-std::pair<double, double> Graph::GetPointCoord(int localPointIdx) {
+std::pair<double, double> Graph::GetPointCoord(int localPointIdx) const {
 	return std::pair<double, double>{adjacencyList[localPointIdx].point.x, adjacencyList[localPointIdx].point.y};
 }
 
@@ -96,8 +185,8 @@ void Graph::AddEdge(size_t from, Vertex::Edge edge) {
 	}
 }
 
-void Graph::GenerateSpTree(int origin) {
-	spTrees[origin].assign(adjacencyList.size(), { -1, -1 });
+std::vector<Graph::spData> Graph::GenerateSpTree(int origin, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList) const {
+	std::vector <spData> ans(adjacencyList.size(), { -1, -1 });
 	struct dijkstraData {
 		int idx;
 		int prev;
@@ -107,45 +196,31 @@ void Graph::GenerateSpTree(int origin) {
 	std::priority_queue<dijkstraData, std::vector<dijkstraData>, decltype(comparator)> dijkstra(comparator);
 	dijkstra.push({ origin, -1, 0 });
 	for (size_t i = 0; i < adjacencyList.size(); i++) {
-		int cur = dijkstra.top().idx;
-		while (spTrees[origin][cur].length != -1) {
+		dijkstraData cur = { origin, -1, 0 };
+		while (((ans[cur.idx].length != -1) || ((verticesBlackList.count(cur.idx) != 0) && (cur.idx != origin)) || 
+			(edgesBlackList.count(std::make_pair(cur.prev, cur.idx)))) && (!dijkstra.empty())) {
+			cur = dijkstra.top();
 			dijkstra.pop();
-			cur = dijkstra.top().idx;
 		}
-		spTrees[origin][cur] = { dijkstra.top().prev, dijkstra.top().length };
-		for (const auto& edge : adjacencyList[cur].edges) {
-			if (spTrees[origin][edge.to].length == -1) {
-				dijkstra.push({ static_cast<int>(edge.to), cur, spTrees[origin][cur].length + edge.length });
+		if (dijkstra.empty()) {
+			break;
+		}
+		ans[cur.idx] = { cur.prev, cur.length };
+		for (const auto& edge : adjacencyList[cur.idx].edges) {
+			if (ans[edge.to].length == -1) {
+				dijkstra.push({ static_cast<int>(edge.to), cur.idx, ans[cur.idx].length + edge.length });
 			}
 		}
-	}
-}
-
-int Graph::GetNextOnPath(const std::vector<spData>& spTree, int from, int to) {
-	int ans = to;
-	while (spTree[ans].prevVertex != from) {
-		ans = spTree[ans].prevVertex;
 	}
 	return ans;
 }
 
-void Graph::Draw(SdlWindow& window) {
-	writeLock.lock();
-	for (int i = 0; i < adjacencyList.size(); ++i) {
-		for (const auto& j : adjacencyList[i].edges) {
-			if (j.to < i) {
-				break;
-			}
-			unsigned char color = 255 * (maxLength - j.length + 1) / maxLength;
-			window.SetDrawColor(color, color, color);
-			window.DrawLine(std::round(adjacencyList[i].point.x), std::round(adjacencyList[i].point.y), std::round(adjacencyList[j.to].point.x), std::round(adjacencyList[j.to].point.y));
-		}
+int Graph::GetNextOnPath(const std::vector<spData>& spTree, int from, int to) const {
+	int ans = to;
+	while ((spTree[ans].prevVertex != from) && (spTree[ans].prevVertex != -1)) {
+		ans = spTree[ans].prevVertex;
 	}
-	window.SetDrawColor(255, 255, 255);
-	for (const auto& i : adjacencyList) {
-		window.DrawRectangle(std::round(i.point.x - 5), std::round(i.point.y - 5), std::round(i.point.x + 5), std::round(i.point.y + 5));
-	}
-	writeLock.unlock();
+	return ans;
 }
 
 void Graph::DrawEdges(SdlWindow& window) {
@@ -157,94 +232,10 @@ void Graph::DrawEdges(SdlWindow& window) {
 			double k = (maxLength - j.length) / maxLength;
 			k = 0.2 + k * 0.8;
 			unsigned char color = 255 * k;
-			window.SetDrawColor(color, color, color);
+			window.SetDrawColor(255, 255, 255);
 			window.DrawLine(std::round(adjacencyList[i].point.x), std::round(adjacencyList[i].point.y), std::round(adjacencyList[j.to].point.x), std::round(adjacencyList[j.to].point.y));
 		}
 	}
-}
-
-double Graph::ApplyForce() {
-	constexpr double coulombsK = 10000.0;
-	constexpr double moveK = 0.1;
-	static double maxAllowedSquare = 500 * 500 / moveK;
-	static std::vector<std::pair<double, double>> forces;
-	if (forces.empty()) {
-		forces.resize(adjacencyList.size());
-	}
-
-	maxAllowedSquare = std::pow(std::sqrt(maxAllowedSquare) * 0.999, 2);
-
-	for (int i = 0; i < adjacencyList.size(); ++i) { // Coulomb's law
-		for (int j = adjacencyList.size() - 1; j > i; --j) {
-			double x = adjacencyList[i].point.x - adjacencyList[j].point.x;
-			double y = adjacencyList[i].point.y - adjacencyList[j].point.y;
-
-			double square = x * x + y * y;
-			double k = coulombsK / (square * std::sqrt(square));
-			double xForce = x * k;
-			double yForce = y * k;
-
-			forces[i].first += xForce;
-			forces[i].second += yForce;
-			forces[j].first -= xForce;
-			forces[j].second -= yForce;
-		}
-	}
-
-	for (int i = 0; i < adjacencyList.size(); ++i) { // push to the middle
-		double x = adjacencyList[i].point.x - X_MIDDLE;
-		double y = adjacencyList[i].point.y - Y_MIDDLE;
-
-		double k = std::max(1.0, adjacencyList.size() / 500.0) / std::sqrt(x * x + y * y);
-		forces[i].first -= x * k;
-		forces[i].second -= y * k;
-	}
-
-	double maxSquare = 0;
-	for (int i = 0; i < adjacencyList.size(); ++i) { // Hooke's law
-		for (const auto& j : adjacencyList[i].edges) {
-			if (j.to < i) {
-				break;
-			}
-
-			double x = adjacencyList[i].point.x - adjacencyList[j.to].point.x;
-			double y = adjacencyList[i].point.y - adjacencyList[j.to].point.y;
-
-			double k = (maxLength + 1 - j.length) / 100.0;
-			double xForce = x * k;
-			double yForce = y * k;
-
-			forces[i].first -= xForce;
-			forces[i].second -= yForce;
-			forces[j.to].first += xForce;
-			forces[j.to].second += yForce;
-		}
-
-		double currentForceSquare = forces[i].first * forces[i].first + forces[i].second * forces[i].second;
-		if (currentForceSquare > maxSquare) {
-			maxSquare = currentForceSquare;
-		}
-	}
-	
-	if (maxSquare > maxAllowedSquare) {
-		double k = std::sqrt(maxAllowedSquare) / std::sqrt(maxSquare);
-		for (auto& i : forces) {
-			i.first *= k;
-			i.second *= k;
-		}
-	}
-
-	double total = 0;
-	writeLock.lock();
-	for (int i = 0; i < adjacencyList.size(); ++i) {
-		double distanceX = forces[i].first * moveK;
-		double distanceY = forces[i].second * moveK;
-		adjacencyList[i].point.x += distanceX;
-		adjacencyList[i].point.y += distanceY;
-		total += std::abs(distanceX) + std::abs(distanceY);
-	}
-	writeLock.unlock();
-	return total;
 }
 
 void Graph::ParseStructure(std::istream& input) {
@@ -280,7 +271,7 @@ void Graph::ParseCoordinates(std::istream& input) {
 	auto nodeMap = document.GetRoot().AsMap();
 	for (const auto& node : nodeMap["coordinates"].AsArray()) {
 		auto coordMap = node.AsMap();
-		size_t curIdx = coordMap["idx"].AsInt();
+		size_t curIdx = TranslateVertexIdx(coordMap["idx"].AsInt());
 		adjacencyList[curIdx].point.x = coordMap["x"].AsDouble();
 		adjacencyList[curIdx].point.y = coordMap["y"].AsDouble();
 	}
