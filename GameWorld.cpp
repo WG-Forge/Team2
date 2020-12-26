@@ -55,11 +55,9 @@ void GameWorld::MakeMove() {
 	int armor = map.GetArmor(map.TranslateVertexIdx(connection.GetHomeIdx())) - 5;
 	auto town = GetPosition(map.TranslateVertexIdx(connection.GetHomeIdx()));
 	std::vector<size_t> trainsToUpgrade;
-	everythingUpgraded = true;
 	std::vector<size_t> townsToUpgrade;
 
-	if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) == 1) {
-		everythingUpgraded = false;
+	if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) == 1 && hasUpgradedTrain) {
 		int price = map.GetNextLevelPrice(map.TranslateVertexIdx(connection.GetHomeIdx()));
 		if (price <= armor) {
 			townsToUpgrade.push_back(map.GetPostIdx(map.TranslateVertexIdx(connection.GetHomeIdx())));
@@ -71,19 +69,17 @@ void GameWorld::MakeMove() {
 		if (i.level >= 3) {
 			continue;
 		}
-		everythingUpgraded = false;
 		if (town != GetPosition(i.lineIdx, i.position)) {
 			continue;
 		}
 		if (i.nextLevelPrice <= armor) {
-
+			hasUpgradedTrain = true;
 			armor -= i.nextLevelPrice;
 			trainsToUpgrade.push_back(i.idx);
 		}
 	}
 
-	if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) == 2) {
-		everythingUpgraded = false;
+	if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) < 3) {
 		int price = map.GetNextLevelPrice(map.TranslateVertexIdx(connection.GetHomeIdx()));
 		if (price <= armor) {
 			townsToUpgrade.push_back(map.GetPostIdx(map.TranslateVertexIdx(connection.GetHomeIdx())));
@@ -180,10 +176,14 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrain(Train& train) {
 
 	int target = map.TranslateVertexIdx(connection.GetHomeIdx());
 	if (train.load == 0) {
+		bool toTargetMarket = false;
 		if (trainsTargets.count(train.idx)) {
+			if (map.GetPostType(trainsTargets[train.idx]) == Post::PostTypes::MARKET) {
+				toTargetMarket = true;
+			}
 			takenPosts.erase(trainsTargets[train.idx]);
 		}
-		if (marketsToFocus) {
+		if (marketsToFocus || toTargetMarket) {
 			target = map.GetBestMarket(source, target, train.capacity, takenPosts, edgesBlackList, train.position, onPathTo).first;
 		}
 		else if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) < 3) {
@@ -249,6 +249,7 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrainTo(Train& train, int
 	case Post::PostTypes::STORAGE:
 		blackList = map.GetMarkets();
 	}
+	blackList.insert(pointBlackList.begin(), pointBlackList.end());
 	for (auto [t, i] : trainsTargets) {
 		if (t == train.idx) {
 			continue;

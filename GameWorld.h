@@ -25,7 +25,7 @@ private:
 	};
 
 	std::vector<ServerConnection> helpConnections;
-	bool everythingUpgraded = false;
+	bool hasUpgradedTrain = false;
 	int marketsToFocus;
 	ServerConnection connection;
 	TextureManager& textureManager;
