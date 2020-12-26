@@ -8,7 +8,6 @@
 #include <random>
 
 constexpr int frameTime = 33;
-constexpr double stableThreshold = 20.0;
 constexpr int playerCount = 1;
 
 std::string generateRandomString();
@@ -27,7 +26,9 @@ int main(int argC, char** argV) {
 
 		std::thread updateThread{ [&world, &toExit]() {
 			try {
+#ifndef _DEBUG
 				int turn = 0;
+#endif
 				while (!toExit) {
 #ifndef _DEBUG
 					auto before = std::chrono::high_resolution_clock::now();
@@ -36,7 +37,11 @@ int main(int argC, char** argV) {
 						world.MakeMove();
 						world.Update();
 					}
-					catch (...) {
+					catch (const std::runtime_error& e) {
+#ifndef _DEBUG
+						std::cout << e.what() << std::endl;
+						--turn;
+#endif
 					}
 #ifndef _DEBUG
 					auto after = std::chrono::high_resolution_clock::now();
