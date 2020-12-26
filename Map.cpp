@@ -70,6 +70,10 @@ int Map::GetLevel(int idx)
 	return posts[idx].level;
 }
 
+int Map::GetPopulation(int idx) {
+	return posts[idx].populationLoad;
+}
+
 int Map::GetNextLevelPrice(int idx)
 {
 	return posts[idx].nextLevelPrice;
@@ -78,6 +82,10 @@ int Map::GetNextLevelPrice(int idx)
 int Map::GetPostIdx(int idx)
 {
 	return posts[idx].idx;
+}
+
+Post::PostTypes Map::GetPostType(int idx) {
+	return posts[idx].type;
 }
 
 const std::unordered_set<int>& Map::GetMarkets() {

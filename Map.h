@@ -41,8 +41,10 @@ public:
 	std::pair<int, double> GetBestStorage(int from, int home, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList, int dist = 0, int onPathTo = -1);
 	int GetArmor(int idx);
 	int GetLevel(int idx);
+	int GetPopulation(int idx);
 	int GetNextLevelPrice(int idx);
 	int GetPostIdx(int idx);
+	Post::PostTypes GetPostType(int idx);
 	const std::unordered_set<int>& GetMarkets();
 	const std::unordered_set<int>& GetStorages();
 	const std::unordered_set<int>& GetTowns();
