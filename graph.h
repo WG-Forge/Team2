@@ -53,7 +53,6 @@ public:
     explicit Graph(const std::string& filename); // creates graph with points in circular layout from file with json data
     Graph(const std::string& jsonStructureData, const std::string& jsonCoordinatesData);
     int TranslateVertexIdx(size_t idx) const;
-    int TranslateEdgeIdx(size_t idx) const;
     int GetEdgeIdx(int from, int to) const;
     double GetDistance(int from, int to) const;
     double GetDistance(int from, int to, int dist, int onPathTo) const;
@@ -66,7 +65,7 @@ public:
     std::pair<int, int> GetEdgeVertices(int originalEdgeIdx) const; // returns local from-to idx pair
     double GetEdgeLength(int originalEdgeIdx) const; // returns length of edge
     std::pair<double, double> GetPointCoord(int localPointIdx) const; // returns x-y pair
-    virtual void Draw(SdlWindow& window); // draws current graph
+    virtual void Draw(SdlWindow& window) = 0; // draws current graph
     void DrawEdges(SdlWindow& window);
     virtual ~Graph() = default;
 private:
