@@ -104,7 +104,7 @@ std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_s
 
 std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList, int dist, int onPathTo) const {
 	auto ans = GenerateSpTree(from, verticesBlackList, edgesBlackList);
-	if (dist != 0) {
+	if (dist != 0 && edgesBlackList.count({ from, onPathTo }) == 0) {
 		auto buf = GenerateSpTree(onPathTo, verticesBlackList, edgesBlackList);
 		if (ans[to].length != -1) {
 			ans[to].length += dist;
@@ -134,7 +134,7 @@ std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_s
 		return to;
 	}
 	auto ans = GenerateSpTree(from, verticesBlackList, edgesBlackList);
-	if (dist != 0) {
+	if (dist != 0 && edgesBlackList.count({ from, onPathTo }) == 0) {
 		auto buf = GenerateSpTree(onPathTo, verticesBlackList, edgesBlackList);
 		if (ans[to].length != -1) {
 			ans[to].length += dist;
