@@ -84,7 +84,17 @@ int Graph::GetNextOnPath(int from, int to, int dist, int onPathTo) const {
 }
 
 std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList) const {
- 	auto ans = GenerateSpTree(from, verticesBlackList);
+	if (from == to) {
+		return 0.0;
+	}
+	auto blackList = verticesBlackList;
+	if (blackList.count(to)) {
+		blackList.erase(to);
+	}
+	if (blackList.count(from)) {
+		blackList.erase(from);
+	}
+ 	auto ans = GenerateSpTree(from, blackList);
 	if (ans[to].length == -1) {
 		return std::nullopt;
 	}
@@ -95,7 +105,14 @@ std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_s
 	if (from == to) {
 		return to;
 	}
-	auto ans = GenerateSpTree(from, verticesBlackList);
+	auto blackList = verticesBlackList;
+	if (blackList.count(to)) {
+		blackList.erase(to);
+	}
+	if (blackList.count(from)) {
+		blackList.erase(from);
+	}
+	auto ans = GenerateSpTree(from, blackList);
 	if (ans[to].length == -1) {
 		return std::nullopt;
 	}
@@ -103,7 +120,14 @@ std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_s
 }
 
 std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList, int dist, int onPathTo) const {
-	auto ans = GenerateSpTree(from, verticesBlackList, edgesBlackList);
+	auto blackList = verticesBlackList;
+	if (blackList.count(to)) {
+		blackList.erase(to);
+	}
+	if (blackList.count(from)) {
+		blackList.erase(from);
+	}
+	auto ans = GenerateSpTree(from, blackList, edgesBlackList);
 	if (dist != 0 && edgesBlackList.count({ from, onPathTo }) == 0) {
 		auto buf = GenerateSpTree(onPathTo, verticesBlackList, edgesBlackList);
 		if (ans[to].length != -1) {
@@ -133,7 +157,14 @@ std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_s
 	if (from == to) {
 		return to;
 	}
-	auto ans = GenerateSpTree(from, verticesBlackList, edgesBlackList);
+	auto blackList = verticesBlackList;
+	if (blackList.count(to)) {
+		blackList.erase(to);
+	}
+	if (blackList.count(from)) {
+		blackList.erase(from);
+	}
+	auto ans = GenerateSpTree(from, blackList, edgesBlackList);
 	if (dist != 0 && edgesBlackList.count({ from, onPathTo }) == 0) {
 		auto buf = GenerateSpTree(onPathTo, verticesBlackList, edgesBlackList);
 		if (ans[to].length != -1) {
