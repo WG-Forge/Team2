@@ -40,7 +40,6 @@ private:
 	std::unordered_map<int, int> trainsTargets;
 	int gameTick = 0;
 public:
-	GameWorld(const std::string& playerName, TextureManager& textureManager);
 	GameWorld(const std::string& playerName, const std::string& gameName, int playerCount, int numTurns, TextureManager& textureManager);
 	double GetScore();
 	void Update(); // updates map and trains

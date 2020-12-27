@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <unordered_set>
 
+#define NO_BUG_COLLISION
+
 #define PATHFINDING_DEBUG
 
 #ifdef _DEBUG
@@ -22,11 +24,6 @@ void makeMoveRequest(int lineIdx, int speed, int trainIdx, ServerConnection& con
 	catch (std::runtime_error& error) {
 		std::cout << error.what() << std::endl;
 	}
-}
-
-GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManager) : connection{ playerName },	textureManager{textureManager},
-		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
-	Update(connection.GetMapDynamicObjects());
 }
 
 GameWorld::GameWorld(const std::string& playerName, const std::string& gameName, int playerCount, int numTurns, TextureManager& textureManager) : 
@@ -423,6 +420,7 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 		}
 		else {
 			takenPositions.insert(GetPosition(train.lineIdx, train.position));
+#ifdef NO_BUG_COLLISION
 			if (train.speed != 0) {
 				takenPositions.insert(GetNextPosition(train.lineIdx, train.position, train.speed));
 			}
@@ -430,6 +428,9 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 				takenPositions.insert(GetNextPosition(train.lineIdx, train.position, 1));
 				takenPositions.insert(GetNextPosition(train.lineIdx, train.position, -1));
 			}
+#else
+			takenPositions.insert(GetNextPosition(train.lineIdx, train.position, train.speed));
+#endif
 		}
 
 		if (train.speed == -1.0) {
