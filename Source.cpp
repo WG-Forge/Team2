@@ -46,11 +46,13 @@ int main(int argC, char** argV) {
 #ifndef _DEBUG
 						std::cout << e.what() << std::endl;
 						--turn;
+						std::cout << "score: " << world.GetScore() << std::endl;
 #endif
 					}
 #ifndef _DEBUG
 					auto after = std::chrono::high_resolution_clock::now();
-					std::cout << "turn " << ++turn << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << "ms" << std::endl;
+					std::cout << "turn " << ++turn << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << "ms; ";
+					std::cout << "score: " << world.GetScore() << std::endl;
 #endif
 				}
 			}
