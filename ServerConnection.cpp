@@ -51,15 +51,16 @@ ServerConnection::ServerConnection(const std::string& playerName, int playerCoun
 	password = generateRandomPassword();
 	login = playerName;
 	std::string req = "{\"name\":\"" + login + "\", \"password\":\"" + password + "\"";
+	req += ", \"num_turns\":" + std::to_string(numTurns);
+	req += ", \"num_players\":" + std::to_string(playerCount);
 	if (!gameName.empty()) {
-		req += ", \"game\":\"" + gameName + "\"}";
+		req += ", \"game\":\"" + gameName + "\"";
 		this->gameName = gameName;
 	}
 	else {
-		req += ", \"num_turns\":" + std::to_string(numTurns);
-		req += ", \"num_players\":" + std::to_string(playerCount) + "}";
 		this->gameName = "Game of " + login;
 	}
+	req += "}";
 	SendMessage(Request::LOGIN, req);
 
 	std::stringstream responseStream = std::stringstream(GetResponse());
