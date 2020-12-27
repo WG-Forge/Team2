@@ -25,8 +25,8 @@ private:
 	};
 
 	std::vector<ServerConnection> helpConnections;
-	bool hasUpgradedTrain = false;
 	int marketsToFocus;
+	double spentArmor = 0;
 	ServerConnection connection;
 	TextureManager& textureManager;
 	Map map;
@@ -38,9 +38,11 @@ private:
 	std::unordered_set<uint64_t> takenPositions;
 	std::unordered_set<uint64_t> whitePositions;
 	std::unordered_map<int, int> trainsTargets;
+	int gameTick = 0;
 public:
 	GameWorld(const std::string& playerName, TextureManager& textureManager);
 	GameWorld(const std::string& playerName, const std::string& gameName, int playerCount, int numTurns, TextureManager& textureManager);
+	double GetScore();
 	void Update(); // updates map and trains
 	void Draw(SdlWindow& window);
 	void MakeMove();
@@ -49,6 +51,9 @@ private:
 	void MoveTrains();
 	std::optional<TrainMoveData> MoveTrain(Train& train);
 	std::optional<TrainMoveData> MoveTrainTo(Train& train, int to);
+	TrainMoveData MoveTrainDir(int trainIdx, int lineIdx, double position, int dir);
+	TrainMoveData MoveTrainDir(int trainIdx, int lineIdx, int prevLineIdx, double position, int dir);
+	double GetDistAndFixSource(const Train& train, int& source, int& onPathTo);
 	void UpdateTrains(const std::string& jsonData);
 	void DrawTrains(SdlWindow& window);
 	uint64_t GetPosition(int vertex);
