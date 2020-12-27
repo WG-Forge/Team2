@@ -65,6 +65,10 @@ int Map::GetArmor(int idx) {
 	return posts[idx].armorLoad;
 }
 
+int Map::GetProduct(int idx) {
+	return posts[idx].goodsLoad;
+}
+
 int Map::GetLevel(int idx)
 {
 	return posts[idx].level;

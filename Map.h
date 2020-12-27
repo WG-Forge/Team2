@@ -40,6 +40,7 @@ public:
 	std::pair<int, double> GetBestMarket(int from, int home, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList, int dist = 0, int onPathTo = -1);
 	std::pair<int, double> GetBestStorage(int from, int home, double maxLoad, const std::unordered_set<int>& vBlackList, const std::unordered_set<edge> eBlackList, int dist = 0, int onPathTo = -1);
 	int GetArmor(int idx);
+	int GetProduct(int idx);
 	int GetLevel(int idx);
 	int GetPopulation(int idx);
 	int GetNextLevelPrice(int idx);
