@@ -40,7 +40,7 @@ private:
 	std::unordered_map<int, int> trainsTargets;
 public:
 	GameWorld(const std::string& playerName, TextureManager& textureManager);
-	GameWorld(const std::string& playerName, const std::string& gameName, int playerCount, TextureManager& textureManager);
+	GameWorld(const std::string& playerName, const std::string& gameName, int playerCount, int numTurns, TextureManager& textureManager);
 	void Update(); // updates map and trains
 	void Draw(SdlWindow& window);
 	void MakeMove();

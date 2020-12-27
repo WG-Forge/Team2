@@ -9,6 +9,7 @@
 
 constexpr int frameTime = 33;
 constexpr int playerCount = 1;
+constexpr int numTurns = 500;
 
 std::string generateRandomString();
 
@@ -20,7 +21,7 @@ int main(int argC, char** argV) {
 		SdlManager manager{};
 		SdlWindow window{ "graph demo", 1280, 960 };
 		TextureManager textureManager = window.CreateTextureManager();
-		GameWorld world{ generateRandomString(), gameName, playerCount, textureManager };
+		GameWorld world{ generateRandomString(), gameName, playerCount, numTurns, textureManager };
 		bool toExit = false;
 		auto lastUpdateTime = std::chrono::high_resolution_clock::now();
 

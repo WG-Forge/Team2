@@ -32,8 +32,8 @@ GameWorld::GameWorld(const std::string& playerName, TextureManager& textureManag
 	Update(connection.GetMapDynamicObjects());
 }
 
-GameWorld::GameWorld(const std::string& playerName, const std::string& gameName, int playerCount, TextureManager& textureManager) : 
-		connection{ playerName, playerCount, gameName }, textureManager { textureManager },
+GameWorld::GameWorld(const std::string& playerName, const std::string& gameName, int playerCount, int numTurns, TextureManager& textureManager) : 
+		connection{ playerName, playerCount, gameName, numTurns }, textureManager { textureManager },
 		map{ connection.GetMapStaticObjects(), connection.GetMapCoordinates(), connection.GetMapDynamicObjects(), textureManager } {
 	Update(connection.GetMapDynamicObjects());
 }
@@ -107,7 +107,12 @@ void GameWorld::Update(const std::string& jsonData) {
 
 void GameWorld::MoveTrains() {
 #ifdef _PATHFINDING_DEBUG
-	std::cout << std::endl;
+	std::cout << std::endl << std::endl;
+	std::cout << "point black list:";
+	for (auto i : pointBlackList) {
+		std::cout << std::endl << i;
+	}
+	std::cout << std::endl << "edges black list: ";
 	for (auto i : edgesBlackList) {
 		std::cout << std::endl << i.first << ' ' << i.second;
 	}
@@ -193,7 +198,7 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrain(Train& train) {
 			target = map.GetBestStorage(source, target, train.capacity, takenPosts, edgesBlackList, train.position, onPathTo).first;
 		}
 		else {
-			target = map.GetBestMarket(source, target, train.capacity, takenPosts, edgesBlackList, train.position, onPathTo).first;
+			target = map.GetBestMarket(source, target, train.capacity, {}, edgesBlackList, train.position, onPathTo).first;
 		}
 		takenPosts.insert(target);
 		trainsTargets[train.idx] = target;
@@ -251,7 +256,7 @@ std::optional<GameWorld::TrainMoveData> GameWorld::MoveTrainTo(Train& train, int
 	}
 	blackList.insert(pointBlackList.begin(), pointBlackList.end());
 	for (auto [t, i] : trainsTargets) {
-		if (t == train.idx) {
+		if (i == to) {
 			continue;
 		}
 		blackList.insert(i);
@@ -403,6 +408,7 @@ void GameWorld::UpdateTrains(const std::string& jsonData) {
 			takenPositions.insert(GetPosition(train.lineIdx, train.position));
 		}
 		else {
+			takenPositions.insert(GetPosition(train.lineIdx, train.position));
 			takenPositions.insert(GetNextPosition(train.lineIdx, train.position, train.speed));
 		}
 

@@ -44,7 +44,7 @@ ServerConnection::ServerConnection(const std::string& playerName, bool isStrong)
 	homeIdx = home["idx"].AsInt();
 }
 
-ServerConnection::ServerConnection(const std::string& playerName, int playerCount, const std::string& gameName, bool isStrong) {
+ServerConnection::ServerConnection(const std::string& playerName, int playerCount, const std::string& gameName, int numTurns, bool isStrong) {
 	this->isStrong = isStrong;
 	isOriginal = isStrong;
 	EstablishConnection();
@@ -56,6 +56,7 @@ ServerConnection::ServerConnection(const std::string& playerName, int playerCoun
 		this->gameName = gameName;
 	}
 	else {
+		req += ", \"num_turns\":" + std::to_string(numTurns);
 		req += ", \"num_players\":" + std::to_string(playerCount) + "}";
 		this->gameName = "Game of " + login;
 	}
