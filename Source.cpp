@@ -14,11 +14,27 @@ std::string generateRandomString();
 
 int main(int argC, char** argV) {
 	std::string gameName;
+	std::string name;
+	std::string buf;
 	int playerCount = 1;
-	std::cout << "Enter player count: ";
-	std::cin >> playerCount;
-	if (playerCount < 1) {
+	std::cout << "Enter player count or leave blank for default: ";
+	std::getline(std::cin, buf);
+	if (buf.empty()) {
+		std::cout << "1 assumed" << std::endl;
 		playerCount = 1;
+	}
+	else if (buf[0] >= '1' && buf[0] <= '4' && buf.size() == 1) {
+		playerCount = buf[0] - '0';
+	}
+	else {
+		std::cout << "illegal value, 1 assumed" << std::endl;
+		playerCount = 1;
+	}
+	std::cout << "Enter player name or leave blank for default: ";
+	std::getline(std::cin, name);
+	if (name.empty()) {
+		std::cout << "'tema 2' assumed" << std::endl;
+		name = "team 2";
 	}
 	if (playerCount > 1) {
 		std::cout << playerCount << " players game;" << std::endl;
@@ -29,7 +45,7 @@ int main(int argC, char** argV) {
 		SdlManager manager{};
 		SdlWindow window{ "graph demo", 1280, 960 };
 		TextureManager textureManager = window.CreateTextureManager();
-		GameWorld world{ generateRandomString(), gameName, playerCount, numTurns, textureManager };
+		GameWorld world{ name, gameName, playerCount, numTurns, textureManager };
 		bool toExit = false;
 		auto lastUpdateTime = std::chrono::high_resolution_clock::now();
 
