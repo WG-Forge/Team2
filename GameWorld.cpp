@@ -89,9 +89,11 @@ void GameWorld::MakeMove() {
 	else if (map.GetLevel(map.TranslateVertexIdx(connection.GetHomeIdx())) < 3 && allTrainsUpgraded) {
 		int price = map.GetNextLevelPrice(map.TranslateVertexIdx(connection.GetHomeIdx()));
 		if (price <= armor) {
-			townsToUpgrade.push_back(map.GetPostIdx(map.TranslateVertexIdx(connection.GetHomeIdx())));
 			armor -= price;
-			spentArmor += price;
+			if (armor > (500 - gameTick) / 25) {
+				townsToUpgrade.push_back(map.GetPostIdx(map.TranslateVertexIdx(connection.GetHomeIdx())));
+				spentArmor += price;
+			}
 		}
 	}
 	
@@ -147,20 +149,20 @@ void GameWorld::MoveTrains() {
 	{
 	case 0:
 	case 1:
-		marketsToFocus = 2;
+		marketsToFocus = 1;
 		break;
 	case 2:
 	case 3:
 	case 4:
-		marketsToFocus = 3;
+		marketsToFocus = 2;
 		break;
 	case 5:
 	case 6:
-	case 7:
-		marketsToFocus = 4;
+		marketsToFocus = 3;
 		break;
+	case 7:
 	default:
-		marketsToFocus = 5;
+		marketsToFocus = 4;
 	}
 	for (auto& i : trains) {
 		if (i.cooldown != 0) {
