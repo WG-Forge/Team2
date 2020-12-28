@@ -17,13 +17,14 @@
 constexpr char SERVER_ADDRESS[] = "wgforge-srv.wargaming.net";
 constexpr Uint16 SERVER_PORT = 443;
 
-std::string generateRandomPassword()
-{
-	std::random_device rnd{};
-	std::mt19937 random{ rnd() };
+std::string generatePassword(std::string name) {
+	while (name.size() < 2) {
+		name += *(--name.end());
+	}
+	std::mt19937 random{ name[0] * name[1] + 387194u };
 	std::string result;
 	for (int i = 0; i < 16; ++i) {
-		result += 'A' + random() % ('Z' - 'A' + 1);
+		result += name[random() % name.size()];
 	}
 	return result;
 }
@@ -32,7 +33,7 @@ ServerConnection::ServerConnection(const std::string& playerName, int playerCoun
 	this->isStrong = isStrong;
 	isOriginal = isStrong;
 	EstablishConnection();
-	password = generateRandomPassword();
+	password = generatePassword(playerName);
 	login = playerName;
 	std::string req = "{\"name\":\"" + login + "\", \"password\":\"" + password + "\"";
 	req += ", \"num_turns\":" + std::to_string(numTurns);
