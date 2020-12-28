@@ -33,7 +33,7 @@ int main(int argC, char** argV) {
 	std::cout << "Enter player name or leave blank for default: ";
 	std::getline(std::cin, name);
 	if (name.empty()) {
-		std::cout << "'tema 2' assumed" << std::endl;
+		std::cout << "'team 2' assumed" << std::endl;
 		name = "team 2";
 	}
 	if (playerCount > 1) {
