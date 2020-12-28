@@ -7,8 +7,6 @@
 #include <iostream>
 #include <random>
 
-#define PLAYER_COUNT 4
-
 constexpr int frameTime = 33;
 constexpr int numTurns = 500;
 
@@ -16,16 +14,22 @@ std::string generateRandomString();
 
 int main(int argC, char** argV) {
 	std::string gameName;
-#if PLAYER_COUNT > 1
-	std::cout << PLAYER_COUNT << " players game;" << std::endl;
-	std::cout << "Enter game name or leave blank for default: ";
-	std::getline(std::cin, gameName);
-#endif
+	int playerCount = 1;
+	std::cout << "Enter player count: ";
+	std::cin >> playerCount;
+	if (playerCount < 1) {
+		playerCount = 1;
+	}
+	if (playerCount > 1) {
+		std::cout << playerCount << " players game;" << std::endl;
+		std::cout << "Enter game name or leave blank for default: ";
+		std::getline(std::cin, gameName);
+	}
 	try {
 		SdlManager manager{};
 		SdlWindow window{ "graph demo", 1280, 960 };
 		TextureManager textureManager = window.CreateTextureManager();
-		GameWorld world{ generateRandomString(), gameName, PLAYER_COUNT, numTurns, textureManager };
+		GameWorld world{ generateRandomString(), gameName, playerCount, numTurns, textureManager };
 		bool toExit = false;
 		auto lastUpdateTime = std::chrono::high_resolution_clock::now();
 
