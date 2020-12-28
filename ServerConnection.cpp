@@ -28,34 +28,23 @@ std::string generateRandomPassword()
 	return result;
 }
 
-ServerConnection::ServerConnection(const std::string& playerName, bool isStrong) {
+ServerConnection::ServerConnection(const std::string& playerName, int playerCount, const std::string& gameName, int numTurns, bool isStrong) {
 	this->isStrong = isStrong;
 	isOriginal = isStrong;
 	EstablishConnection();
 	password = generateRandomPassword();
 	login = playerName;
-	SendMessage(Request::LOGIN, "{\"name\":\"" + login + "\", \"password\":\"" + password + "\"}");
-	
-	std::stringstream responseStream = std::stringstream(GetResponse());
-	Json::Dict responseDocument = Json::Load(responseStream).GetRoot().AsMap();
-	playerIdx = responseDocument["idx"].AsString();
-	auto home = responseDocument["home"].AsMap();
-	homeIdx = home["idx"].AsInt();
-}
-
-ServerConnection::ServerConnection(const std::string& playerName, int playerCount, const std::string& gameName, bool isStrong) {
-	this->isStrong = isStrong;
-	isOriginal = isStrong;
-	EstablishConnection();
-	password = generateRandomPassword();
-	login = playerName;
-	std::string req = "{\"name\":\"" + login + "\", \"password\":\"" + password + "\", \"num_players\":" + std::to_string(playerCount);
+	std::string req = "{\"name\":\"" + login + "\", \"password\":\"" + password + "\"";
+	req += ", \"num_turns\":" + std::to_string(numTurns);
+	req += ", \"num_players\":" + std::to_string(playerCount);
 	if (!gameName.empty()) {
-		req += ", \"game\":\"" + gameName + "\"}";
+		req += ", \"game\":\"" + gameName + "\"";
+		this->gameName = gameName;
 	}
 	else {
-		req += "}";
+		this->gameName = "Game of " + login;
 	}
+	req += "}";
 	SendMessage(Request::LOGIN, req);
 
 	std::stringstream responseStream = std::stringstream(GetResponse());
@@ -65,12 +54,13 @@ ServerConnection::ServerConnection(const std::string& playerName, int playerCoun
 	homeIdx = home["idx"].AsInt();
 }
 
-ServerConnection::ServerConnection(const std::string& playerName, const std::string& playerPassword, bool isStrong, bool toEstablish) {
+ServerConnection::ServerConnection(const std::string& playerName, const std::string& playerPassword, const std::string& gameName, bool isStrong, bool toEstablish) {
 	this->isEstablished = toEstablish;
 	this->isStrong = isStrong;
 	isOriginal = isStrong;
 	password = playerPassword;
 	login = playerName;
+	this->gameName = gameName;
 	if (!toEstablish) {
 		return;
 	}
@@ -93,6 +83,7 @@ ServerConnection::ServerConnection(ServerConnection&& other) noexcept {
 	isStrong = other.isStrong;
 	isOriginal = other.isOriginal;
 	isEstablished = other.isEstablished;
+	gameName = other.gameName;
 	other.isOriginal = false;
 }
 
@@ -112,6 +103,11 @@ const std::string& ServerConnection::GetPassword() {
 	return password;
 }
 
+std::string ServerConnection::GetGameName()
+{
+	return gameName;
+}
+
 std::string ServerConnection::GetGameState()
 {
 	SendMessage(Request::GAMES, "");
@@ -125,7 +121,7 @@ bool ServerConnection::IsEstablished() {
 void ServerConnection::Establish() {
 	EstablishConnection();
 	isEstablished = true;
-	SendMessage(Request::LOGIN, "{\"name\":\"" + login + "\", \"password\":\"" + password + "\"}");
+	SendMessage(Request::LOGIN, "{\"name\":\"" + login + "\", \"password\":\"" + password + "\", \"game\":\"" + gameName + "\"}");
 	std::stringstream responseStream = std::stringstream(GetResponse());
 	Json::Dict responseDocument = Json::Load(responseStream).GetRoot().AsMap();
 	playerIdx = responseDocument["idx"].AsString();

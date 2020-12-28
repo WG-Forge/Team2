@@ -20,6 +20,7 @@ protected:
 	std::string playerIdx;
 	std::string login;
 	std::string password;
+	std::string gameName;
 	int homeIdx;
 	bool isStrong;
 	bool isOriginal;
@@ -35,15 +36,15 @@ public:
 		INTERNAL_SERVER_ERROR = 500
 	};
 
-	ServerConnection(const std::string& playerName, bool isStrong = true); // performs login operation
-	ServerConnection(const std::string& playerName, int playerCount, const std::string& gameName, bool isStrong = true);
-	ServerConnection(const std::string& playerName, const std::string& playerPassword, bool isStrong = false, bool toEstablish = true);
+	ServerConnection(const std::string& playerName, int playerCount, const std::string& gameName, int numTurns = -1, bool isStrong = true);
+	ServerConnection(const std::string& playerName, const std::string& playerPassword, const std::string& gameName, bool isStrong = false, bool toEstablish = true);
 	ServerConnection(const ServerConnection& other) = delete;
 	ServerConnection(ServerConnection&& other) noexcept;
 	std::string GetMapStaticObjects();
 	std::string GetMapDynamicObjects();
 	std::string GetMapCoordinates();
 	std::string GetGameState();
+	std::string GetGameName();
 	bool IsEstablished();
 	void Establish();
 

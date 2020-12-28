@@ -52,59 +52,16 @@ double Graph::GetDistance(int from, int to) const {
 	return spTrees[from][to].length;
 }
 
-double Graph::GetDistance(int from, int to, int dist, int onPathTo) const {
-	double distanceReturn = GetDistance(from, to) + dist;
-	double distanceContinue = GetDistance(onPathTo, to);
-	for (const auto& edge : adjacencyList[from].edges) {
-		if (edge.to == onPathTo) {
-			distanceContinue += edge.length - dist;
-			break;
-		}
-	}
-	return std::min(distanceReturn, distanceContinue);
-}
-
-int Graph::GetNextOnPath(int from, int to) const {	
-	if (from == to) {
-		return to;
-	}
-	if (spTrees[from].empty()) {
-		spTrees[from] = GenerateSpTree(from);
-	}
-
-	return GetNextOnPath(spTrees[from], from, to);
-}
-
-int Graph::GetNextOnPath(int from, int to, int dist, int onPathTo) const {
-	if (GetDistance(from, to, dist, onPathTo) == GetDistance(from, to)) {
-		return from;
-	} else {
-		return onPathTo;
-	}
-}
-
-std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList) const {
- 	auto ans = GenerateSpTree(from, verticesBlackList);
-	if (ans[to].length == -1) {
-		return std::nullopt;
-	}
-	return ans[to].length;
-}
-
-std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_set<int>& verticesBlackList) const {
-	if (from == to) {
-		return to;
-	}
-	auto ans = GenerateSpTree(from, verticesBlackList);
-	if (ans[to].length == -1) {
-		return std::nullopt;
-	}
-	return GetNextOnPath(ans, from, to);
-}
-
 std::optional<double> Graph::GetDistance(int from, int to, const std::unordered_set<int>& verticesBlackList, const std::unordered_set<edge>& edgesBlackList, int dist, int onPathTo) const {
-	auto ans = GenerateSpTree(from, verticesBlackList, edgesBlackList);
-	if (dist != 0) {
+	auto blackList = verticesBlackList;
+	if (blackList.count(to)) {
+		blackList.erase(to);
+	}
+	if (blackList.count(from)) {
+		blackList.erase(from);
+	}
+	auto ans = GenerateSpTree(from, blackList, edgesBlackList);
+	if (dist != 0 && edgesBlackList.count({ from, onPathTo }) == 0) {
 		auto buf = GenerateSpTree(onPathTo, verticesBlackList, edgesBlackList);
 		if (ans[to].length != -1) {
 			ans[to].length += dist;
@@ -133,8 +90,15 @@ std::optional<int> Graph::GetNextOnPath(int from, int to, const std::unordered_s
 	if (from == to) {
 		return to;
 	}
-	auto ans = GenerateSpTree(from, verticesBlackList, edgesBlackList);
-	if (dist != 0) {
+	auto blackList = verticesBlackList;
+	if (blackList.count(to)) {
+		blackList.erase(to);
+	}
+	if (blackList.count(from)) {
+		blackList.erase(from);
+	}
+	auto ans = GenerateSpTree(from, blackList, edgesBlackList);
+	if (dist != 0 && edgesBlackList.count({ from, onPathTo }) == 0) {
 		auto buf = GenerateSpTree(onPathTo, verticesBlackList, edgesBlackList);
 		if (ans[to].length != -1) {
 			ans[to].length += dist;
@@ -229,9 +193,6 @@ void Graph::DrawEdges(SdlWindow& window) {
 			if (j.to < i) {
 				break;
 			}
-			double k = (maxLength - j.length) / maxLength;
-			k = 0.2 + k * 0.8;
-			unsigned char color = 255 * k;
 			window.SetDrawColor(255, 255, 255);
 			window.DrawLine(std::round(adjacencyList[i].point.x), std::round(adjacencyList[i].point.y), std::round(adjacencyList[j.to].point.x), std::round(adjacencyList[j.to].point.y));
 		}
